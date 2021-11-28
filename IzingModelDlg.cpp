@@ -321,4 +321,8 @@ void CIzingModelDlg::OnBnClickedPicture()
 void CIzingModelDlg::OnBnClickedDropping()
 {
 	// TODO: добавьте свой код обработчика уведомлений
+	// Очистка глобального вектора.
+	vecIzingModel.clear();
+	// Перерисовка.
+	OnBnClickedPicture();
 }
