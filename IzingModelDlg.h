@@ -45,6 +45,9 @@ public:
 	afx_msg void OnBnClickedCalculate();
 	afx_msg void OnBnClickedPicture();
 	afx_msg void OnBnClickedDropping();
+	afx_msg void OnBnClickedRadio1();
+	afx_msg void OnBnClickedRadio2();
+	afx_msg void OnBnClickedRadio3();
 
 	int value_size;
 	CButton radio_XY;
