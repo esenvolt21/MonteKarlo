@@ -31,6 +31,9 @@ void CIzingModelDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_RADIO1, radio_XY);
 	DDX_Control(pDX, IDC_RADIO2, radio_YZ);
 	DDX_Control(pDX, IDC_RADIO3, radio_ZX);
+	DDX_Control(pDX, IDC_CALCULATE, button_calculate);
+	DDX_Control(pDX, IDC_PICTURE, button_picture);
+	DDX_Control(pDX, IDC_DROPPING, button_dropping);
 }
 
 BEGIN_MESSAGE_MAP(CIzingModelDlg, CDialogEx)
@@ -62,6 +65,18 @@ BOOL CIzingModelDlg::OnInitDialog()
 	PicWndImage->GetClientRect(&PicImage);
 
 	this->SetBackgroundColor(RGB(147, 112, 219));
+
+	button_calculate.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_calculate.m_bTransparent = false;//reg for use bg color
+	button_calculate.SetFaceColor(RGB(0, 255, 255), true);
+
+	button_picture.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_picture.m_bTransparent = false;//reg for use bg color
+	button_picture.SetFaceColor(RGB(0, 255, 255), true);
+
+	button_dropping.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_dropping.m_bTransparent = false;//reg for use bg color
+	button_dropping.SetFaceColor(RGB(0, 255, 255), true);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
@@ -130,17 +145,8 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 	// заливка фона графика
 	MemDc->FillSolidRect(WinxmaxGraphc, RGB(147, 112, 219));
 
-	CPen setka_pen;
-	setka_pen.CreatePen(		//для сетки
-		PS_SOLID,					//пунктирная
-		1,						//толщина 1 пиксель
-		RGB(0, 0, 128));			//цвет  grey
-
 	CBrush white_circle(RGB(255, 255, 255));			//цвет white
-
-	CBrush black_circle(RGB(0, 0, 0));			//цвет white
-
-	MemDc->SelectObject(&setka_pen);
+	CBrush black_circle(RGB(0, 0, 0));			//цвет black
 
 	int center = vec.size() / 2;
 	if (radio_XY.GetCheck())

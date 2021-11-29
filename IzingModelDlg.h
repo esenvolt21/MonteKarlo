@@ -53,6 +53,9 @@ public:
 	CButton radio_XY;
 	CButton radio_YZ;
 	CButton radio_ZX;
+	CMFCButton button_calculate;
+	CMFCButton button_picture;
+	CMFCButton button_dropping;
 
 	vector<vector<vector<int>>> vecIzingModel;
 
