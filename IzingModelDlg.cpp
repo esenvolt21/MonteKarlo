@@ -142,6 +142,7 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 
 	MemDc->SelectObject(&setka_pen);
 
+	int center = vec.size() / 2;
 	if (radio_XY.GetCheck())
 	{
 		for (int i = 0; i < vec.size(); i++)
@@ -150,7 +151,7 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 			{
 				double xxi = i;
 				double yyi = j;
-				int color = vec[i][j][0];
+				int color = vec[i][j][center];
 
 				if (color == -1)
 				{
@@ -177,7 +178,7 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 			{
 				double xxi = j;
 				double yyi = k;
-				int color = vec[0][j][k];
+				int color = vec[center][j][k];
 
 				if (color == -1)
 				{
@@ -204,7 +205,7 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 			{
 				double xxi = i;
 				double yyi = k;
-				int color = vec[i][0][k];
+				int color = vec[i][center][k];
 
 				if (color == -1)
 				{
