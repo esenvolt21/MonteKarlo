@@ -62,4 +62,5 @@ public:
 
 	int RandStaff(int min, int max);
 	void DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRect WinxmaxGraphc);
+	void MonteCarloStep();
 };

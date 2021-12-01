@@ -8,6 +8,8 @@
 #include "IzingModelDlg.h"
 #include "afxdialogex.h"
 #include <fstream>
+#include <random>
+#include <iterator>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -282,10 +284,98 @@ void CIzingModelDlg::OnBnClickedCalculate()
 	IzingModel.clear();
 }
 
+template<typename Iter, typename RandomGenerator>
+Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
+	std::uniform_int_distribution<> dis(0, std::distance(start, end) - 1);
+	std::advance(start, dis(g));
+	return start;
+}
+
+template<typename Iter>
+Iter select_randomly(Iter start, Iter end) {
+	static std::random_device rd;
+	static std::mt19937 gen(rd());
+	return select_randomly(start, end, gen);
+}
+
+/**
+Выполнение одного изменения конфигурации.
+**/
+void CIzingModelDlg::MonteCarloStep() {
+	// Проверка, что начальная конфигурация существует.
+	if (!vecIzingModel.empty()) {
+		srand(time(NULL));
+		while (true) {
+			// Выбор случайного спина.
+			int rand_i = RandStaff(0, value_size - 1);
+			int rand_j = RandStaff(0, value_size - 1);
+			int rand_k = RandStaff(0, value_size - 1);
+
+			// Индексы соседнего спина.
+			int neig_i = rand_i;
+			int neig_j = rand_j;
+			int neig_k = rand_k;
+
+			// Проверка соседей на предмет наличия противоположного спина.
+			// 1 случай. Когда выбранный спин не является граничным.
+			if (rand_i > 0 && rand_i < value_size - 1 &&
+				rand_j > 0 && rand_j < value_size - 1 &&
+				rand_k > 0 && rand_k < value_size - 1) {
+				vector<int> neigbour_i{ rand_i - 1, rand_i + 1 };
+				vector<int> neigbour_j{ rand_j - 1, rand_j + 1 };
+				vector<int> neigbour_k{ rand_k - 1, rand_k + 1 };
+				while (!neigbour_i.empty() || !neigbour_j.empty() || !neigbour_k.empty()) {
+					int axis_idx = RandStaff(0, 2);
+					if (axis_idx == 0) {
+						// Выбор левого или правого соседа по оси X.
+						int random_idx = rand() % neigbour_i.size();
+						int value_i = neigbour_i[random_idx];
+						if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[value_i][neig_j][neig_k]) {
+							neig_i = value_i;
+							break;
+						}
+						// Удаление из рассмотрения просмотренного соседа.
+						neigbour_i.erase(neigbour_i.begin() + random_idx);
+					}
+					else if (axis_idx == 1) {
+						// Выбор левого или правого соседа по оси Y.
+						int random_idx = rand() % neigbour_j.size();
+						int value_j = neigbour_j[random_idx];
+						if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[neig_i][value_j][neig_k]) {
+							neig_j = value_j;
+							break;
+						}
+						// Удаление из рассмотрения просмотренного соседа.
+						neigbour_j.erase(neigbour_j.begin() + random_idx);
+					}
+					else if (axis_idx == 2) {
+						// Выбор левого или правого соседа по оси Y.
+						int random_idx = rand() % neigbour_k.size();
+						int value_k = neigbour_k[random_idx];
+						if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[neig_i][neig_j][value_k]) {
+							neig_k = value_k;
+							break;
+						}
+						// Удаление из рассмотрения просмотренного соседа.
+						neigbour_k.erase(neigbour_k.begin() + random_idx);
+					}
+				}
+			}
+
+			if ((rand_i + rand_j + rand_k) != (neig_i + neig_j + neig_k)) {
+				int temp = vecIzingModel[rand_i][rand_j][rand_k];
+				vecIzingModel[rand_i][rand_j][rand_k] = vecIzingModel[neig_i][neig_j][neig_k];
+				vecIzingModel[neig_i][neig_j][neig_k] = temp;
+				DrawImage(vecIzingModel, PicDcImage, PicImage);
+			}
+		}
+	}
+}
+
 void CIzingModelDlg::OnBnClickedPicture()
 {
-	//Отрисовка начальной конфигурации.
-	DrawImage(vecIzingModel, PicDcImage, PicImage);
+	// Выполнение перестановки.
+	MonteCarloStep();
 }
 
 void CIzingModelDlg::OnBnClickedDropping()
