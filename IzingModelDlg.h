@@ -56,6 +56,7 @@ public:
 	CMFCButton button_calculate;
 	CMFCButton button_picture;
 	CMFCButton button_dropping;
+	double Ecm;
 
 	vector<vector<vector<int>>> vecIzingModel;
 

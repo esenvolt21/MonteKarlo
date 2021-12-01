@@ -20,6 +20,7 @@
 CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
 	, value_size(30)
+	, Ecm(1)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -34,6 +35,7 @@ void CIzingModelDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CALCULATE, button_calculate);
 	DDX_Control(pDX, IDC_PICTURE, button_picture);
 	DDX_Control(pDX, IDC_DROPPING, button_dropping);
+	DDX_Text(pDX, IDC_MIXING_ENERGY, Ecm);
 }
 
 BEGIN_MESSAGE_MAP(CIzingModelDlg, CDialogEx)
