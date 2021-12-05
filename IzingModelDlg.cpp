@@ -145,9 +145,9 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 	double GU_X = value_size;
 	double GU_Y = value_size;
 
-	xminImage = -GU_X * 0.04;
+	xminImage = -GU_X * 0.01;
 	xmaxImage = GU_X * 1.01;
-	yminImage = -GU_Y * 0.04;			//минимальное значение y
+	yminImage = -GU_Y * 0.01;			//минимальное значение y
 	ymaxImage = GU_Y * 1.01;
 
 	// создание контекста устройства
@@ -337,7 +337,7 @@ vector<int> CIzingModelDlg::BorderConditions(int rand_idx) {
 double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
 											vector<vector<vector<int>>> new_cfg) {
 	if (!new_cfg.empty() && !vecIzingModel.empty()) {
-		UpdateData(TRUE);
+		
 		// Получение соседей.
 		vector<int> neig_i = BorderConditions(i);
 		vector<int> neig_j = BorderConditions(j);
