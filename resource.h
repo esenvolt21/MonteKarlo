@@ -13,8 +13,13 @@
 #define IDC_PICTURE                     1005
 #define IDC_DROPPING                    1006
 #define IDC_IMAGE                       1007
-#define IDC_ENERGY_OF_SM                1008
 #define IDC_MIXING_ENERGY               1008
+#define IDC_TEMPERATURE_EDIT            1009
+#define IDC_MKSH_COUNT                  1010
+#define IDC_CURRENT_MKSH_STEP           1011
+#define IDC_WITH_GRAPH                  1012
+#define IDC_RADIO5                      1013
+#define IDC_WITHOUT_GRAPH               1013
 
 // Next default values for new objects
 // 
@@ -22,7 +27,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
