@@ -76,14 +76,14 @@ public:
 	double TEMPERATURE;
 	int MKSH_QOUNT;
 	CStatic CURRENT_MKSH_STEP;
+	CButton check_GU;
 
 	vector<vector<vector<int>>> vecIzingModel;
 
 	int RandStaff(int min, int max);
 	void DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRect WinxmaxGraphc);
 	vector<int> BorderConditions(int rand_idx);
-	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
-								vector<vector<vector<int>>> new_cfg);
+	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k, vector<vector<vector<int>>> new_cfg);
 	void MonteCarloStep();
 	void MonteCarlo();
 };

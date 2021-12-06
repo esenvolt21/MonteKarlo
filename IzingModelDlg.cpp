@@ -21,7 +21,7 @@ CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
 	, value_size(30)
 	, Ecm(1)
-	, TEMPERATURE(0.5*T_CRITICAL)
+	, TEMPERATURE(0.5 * T_CRITICAL)
 	, MKSH_QOUNT(100)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -43,6 +43,7 @@ void CIzingModelDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CURRENT_MKSH_STEP, CURRENT_MKSH_STEP);
 	DDX_Control(pDX, IDC_WITH_GRAPH, radio_with_graph);
 	DDX_Control(pDX, IDC_WITHOUT_GRAPH, radio_without_graph);
+	DDX_Control(pDX, IDC_CHECK1, check_GU);
 }
 
 BEGIN_MESSAGE_MAP(CIzingModelDlg, CDialogEx)
@@ -90,7 +91,7 @@ BOOL CIzingModelDlg::OnInitDialog()
 	button_dropping.SetFaceColor(RGB(0, 255, 255), true);
 
 	// Значения чекпоинтов по умолчанию.
-	radio_XY.SetCheck(true);
+	radio_YZ.SetCheck(true);
 	radio_with_graph.SetCheck(true);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
@@ -142,13 +143,26 @@ DWORD WINAPI MyProc(PVOID pv)
 void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRect WinxmaxGraphc)
 {
 	//ГРАФИК СИГНАЛА
-	double GU_X = value_size;
-	double GU_Y = value_size;
+	if (check_GU.GetCheck())
+	{
+		double GU_X = value_size + 2;
+		double GU_Y = value_size + 2;
 
-	xminImage = -GU_X * 0.01;
-	xmaxImage = GU_X * 1.01;
-	yminImage = -GU_Y * 0.01;			//минимальное значение y
-	ymaxImage = GU_Y * 1.01;
+		xminImage = -GU_X * 0.01;
+		xmaxImage = GU_X * 1.01;
+		yminImage = -GU_Y * 0.01;			//минимальное значение y
+		ymaxImage = GU_Y * 1.01;
+	}
+	else
+	{
+		double GU_X = value_size;
+		double GU_Y = value_size;
+
+		xminImage = -GU_X * 0.01;
+		xmaxImage = GU_X * 1.01;
+		yminImage = -GU_Y * 0.01;			//минимальное значение y
+		ymaxImage = GU_Y * 1.01;
+	}
 
 	// создание контекста устройства
 	CBitmap bmp;
@@ -167,19 +181,95 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 	// заливка фона графика
 	MemDc->FillSolidRect(WinxmaxGraphc, RGB(147, 112, 219));
 
+	CPen line_pen;
+	line_pen.CreatePen(		//для сетки
+		PS_SOLID,					//пунктирная
+		3,						//толщина 1 пиксель
+		RGB(255, 0, 0));			//цвет  grey
+
 	CBrush white_circle(RGB(255, 255, 255));			//цвет white
 	CBrush black_circle(RGB(0, 0, 0));			//цвет black
 
+	vector<int> vecHelpMinLeft;
+	vector<int> vecHelpMaxRight;
+	vector<int> vecHelpMinTop;
+	vector<int> vecHelpMaxBotomm;
+
+	vector<vector<vector<int>>> IzingModel;
 	int center = vec.size() / 2;
-	if (radio_XY.GetCheck() == BST_CHECKED)
+	// СЕЛЕДКА
+	if (check_GU.GetCheck())
 	{
-		for (int i = 0; i < vec.size(); i++)
+		vector<int> vecHelp1(value_size + 2, 0);
+		vector<vector<int>> vecHelp2(value_size + 2, vecHelp1);
+		vector<vector<vector<int>>> Model(value_size + 2, vecHelp2);
+		IzingModel = Model;
+
+		if (radio_XY.GetCheck())
 		{
-			for (int j = 0; j < vec[i].size(); j++)
+			for (int i = 0; i < vec.size(); i++)
+			{
+				IzingModel[i + 1][0][center] = vec[i][vec.size() - 1][center];
+				IzingModel[i + 1][IzingModel.size() - 1][center] = vec[i][0][center];
+
+				for (int j = 0; j < vec[i].size(); j++)
+				{
+					IzingModel[0][j + 1][center] = vec[vec.size() - 1][j][center];
+					IzingModel[IzingModel.size() - 1][j + 1][center] = vec[0][j][center];
+
+					IzingModel[i + 1][j + 1][center] = vec[i][j][center];
+
+				}
+			}
+		}
+		else if (radio_YZ.GetCheck())
+		{
+			for (int j = 0; j < vec[0].size(); j++)
+			{
+				IzingModel[center][j + 1][0] = vec[center][j][vec.size() - 1];
+				IzingModel[center][j + 1][IzingModel.size() - 1] = vec[center][j][0];
+
+				for (int k = 0; k < vec[0][j].size(); k++)
+				{
+					IzingModel[center][0][k + 1] = vec[center][vec.size() - 1][k];
+					IzingModel[center][IzingModel.size() - 1][k + 1] = vec[center][0][k];
+
+					IzingModel[center][j + 1][k + 1] = vec[center][j][k];
+				}
+			}
+		}
+		else if (radio_ZX.GetCheck())
+		{
+			for (int i = 0; i < vec.size(); i++)
+			{
+				IzingModel[i + 1][center][0] = vec[i][center][vec.size() - 1];
+				IzingModel[i + 1][center][IzingModel[i][0].size() - 1] = vec[i][center][0];
+				
+				for (int k = 0; k < vec[i][0].size(); k++)
+				{
+					IzingModel[0][center][k + 1] = vec[vec.size() - 1][center][k];
+					IzingModel[IzingModel.size() - 1][center][k + 1] = vec[0][center][k];
+
+					IzingModel[i + 1][center][k + 1] = vec[i][center][k];
+				}
+			}
+		}
+	}
+	else
+	{
+		IzingModel = vec;
+	}
+
+	// РЫБА
+	if (radio_XY.GetCheck())
+	{
+		for (int i = 0; i < IzingModel.size(); i++)
+		{
+			for (int j = 0; j < IzingModel[i].size(); j++)
 			{
 				double xxi = i;
 				double yyi = j;
-				int color = vec[i][j][center];
+				int color = IzingModel[i][j][center];
 
 				if (color == -1)
 				{
@@ -198,15 +288,15 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 			}
 		}
 	}
-	else if (radio_YZ.GetCheck() == BST_CHECKED)
+	else if (radio_YZ.GetCheck())
 	{
-		for (int j = 0; j < vec[0].size(); j++)
+		for (int j = 0; j < IzingModel[0].size(); j++)
 		{
-			for (int k = 0; k < vec[0][j].size(); k++)
+			for (int k = 0; k < IzingModel[0][j].size(); k++)
 			{
 				double xxi = j;
 				double yyi = k;
-				int color = vec[center][j][k];
+				int color = IzingModel[center][j][k];
 
 				if (color == -1)
 				{
@@ -225,15 +315,15 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 			}
 		}
 	}
-	else if (radio_ZX.GetCheck() == BST_CHECKED)
+	else if (radio_ZX.GetCheck())
 	{
-		for (int i = 0; i < vec.size(); i++)
+		for (int i = 0; i < IzingModel.size(); i++)
 		{
-			for (int k = 0; k < vec[i][0].size(); k++)
+			for (int k = 0; k < IzingModel[i][0].size(); k++)
 			{
 				double xxi = i;
 				double yyi = k;
-				int color = vec[i][center][k];
+				int color = IzingModel[i][center][k];
 
 				if (color == -1)
 				{
@@ -251,6 +341,16 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 				}
 			}
 		}
+	}
+
+	if (check_GU.GetCheck())
+	{
+		MemDc->SelectObject(&line_pen);
+		MemDc->MoveTo(DOTSIMAGE(1, 1));
+		MemDc->LineTo(DOTSIMAGE(1, vec.size()+1));
+		MemDc->LineTo(DOTSIMAGE(vec.size() + 1, vec.size() + 1));
+		MemDc->LineTo(DOTSIMAGE(vec.size() + 1, 1));
+		MemDc->LineTo(DOTSIMAGE(1, 1));
 	}
 
 	// вывод на экран
@@ -335,9 +435,9 @@ vector<int> CIzingModelDlg::BorderConditions(int rand_idx) {
 }
 
 double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
-											vector<vector<vector<int>>> new_cfg) {
+	vector<vector<vector<int>>> new_cfg) {
 	if (!new_cfg.empty() && !vecIzingModel.empty()) {
-		
+
 		// Получение соседей.
 		vector<int> neig_i = BorderConditions(i);
 		vector<int> neig_j = BorderConditions(j);
@@ -437,7 +537,7 @@ void CIzingModelDlg::MonteCarloStep() {
 					neigbour_k.erase(neigbour_k.begin() + random_idx);
 				}
 			}
-	
+
 			// Если нужный сосед найден - меняется спин, считаются энергии.
 			if ((rand_i + rand_j + rand_k) != (neig_i + neig_j + neig_k)) {
 				// Генерация новой конфигурации.
