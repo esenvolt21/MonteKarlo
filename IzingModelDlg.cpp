@@ -21,7 +21,7 @@ CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
 	, value_size(30)
 	, Ecm(1)
-	, TEMPERATURE(0.5 * T_CRITICAL)
+	, TEMPERATURE(0.6)
 	, MKSH_QOUNT(100)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -190,167 +190,169 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 	CBrush white_circle(RGB(255, 255, 255));			//цвет white
 	CBrush black_circle(RGB(0, 0, 0));			//цвет black
 
-	vector<int> vecHelpMinLeft;
-	vector<int> vecHelpMaxRight;
-	vector<int> vecHelpMinTop;
-	vector<int> vecHelpMaxBotomm;
+	if (!vec.empty()) {
+		vector<int> vecHelpMinLeft;
+		vector<int> vecHelpMaxRight;
+		vector<int> vecHelpMinTop;
+		vector<int> vecHelpMaxBotomm;
 
-	vector<vector<vector<int>>> IzingModel;
-	int center = vec.size() / 2;
-	// СЕЛЕДКА
-	if (check_GU.GetCheck())
-	{
-		vector<int> vecHelp1(value_size + 2, 0);
-		vector<vector<int>> vecHelp2(value_size + 2, vecHelp1);
-		vector<vector<vector<int>>> Model(value_size + 2, vecHelp2);
-		IzingModel = Model;
+		vector<vector<vector<int>>> IzingModel;
+		int center = vec.size() / 2;
+		// СЕЛЕДКА
+		if (check_GU.GetCheck())
+		{
+			vector<int> vecHelp1(value_size + 2, 0);
+			vector<vector<int>> vecHelp2(value_size + 2, vecHelp1);
+			vector<vector<vector<int>>> Model(value_size + 2, vecHelp2);
+			IzingModel = Model;
 
+			if (radio_XY.GetCheck())
+			{
+				for (int i = 0; i < vec.size(); i++)
+				{
+					IzingModel[i + 1][0][center] = vec[i][vec.size() - 1][center];
+					IzingModel[i + 1][IzingModel.size() - 1][center] = vec[i][0][center];
+
+					for (int j = 0; j < vec[i].size(); j++)
+					{
+						IzingModel[0][j + 1][center] = vec[vec.size() - 1][j][center];
+						IzingModel[IzingModel.size() - 1][j + 1][center] = vec[0][j][center];
+
+						IzingModel[i + 1][j + 1][center] = vec[i][j][center];
+
+					}
+				}
+			}
+			else if (radio_YZ.GetCheck())
+			{
+				for (int j = 0; j < vec[0].size(); j++)
+				{
+					IzingModel[center][j + 1][0] = vec[center][j][vec.size() - 1];
+					IzingModel[center][j + 1][IzingModel.size() - 1] = vec[center][j][0];
+
+					for (int k = 0; k < vec[0][j].size(); k++)
+					{
+						IzingModel[center][0][k + 1] = vec[center][vec.size() - 1][k];
+						IzingModel[center][IzingModel.size() - 1][k + 1] = vec[center][0][k];
+
+						IzingModel[center][j + 1][k + 1] = vec[center][j][k];
+					}
+				}
+			}
+			else if (radio_ZX.GetCheck())
+			{
+				for (int i = 0; i < vec.size(); i++)
+				{
+					IzingModel[i + 1][center][0] = vec[i][center][vec.size() - 1];
+					IzingModel[i + 1][center][IzingModel[i][0].size() - 1] = vec[i][center][0];
+
+					for (int k = 0; k < vec[i][0].size(); k++)
+					{
+						IzingModel[0][center][k + 1] = vec[vec.size() - 1][center][k];
+						IzingModel[IzingModel.size() - 1][center][k + 1] = vec[0][center][k];
+
+						IzingModel[i + 1][center][k + 1] = vec[i][center][k];
+					}
+				}
+			}
+		}
+		else
+		{
+			IzingModel = vec;
+		}
+
+		// РЫБА
 		if (radio_XY.GetCheck())
 		{
-			for (int i = 0; i < vec.size(); i++)
+			for (int i = 0; i < IzingModel.size(); i++)
 			{
-				IzingModel[i + 1][0][center] = vec[i][vec.size() - 1][center];
-				IzingModel[i + 1][IzingModel.size() - 1][center] = vec[i][0][center];
-
-				for (int j = 0; j < vec[i].size(); j++)
+				for (int j = 0; j < IzingModel[i].size(); j++)
 				{
-					IzingModel[0][j + 1][center] = vec[vec.size() - 1][j][center];
-					IzingModel[IzingModel.size() - 1][j + 1][center] = vec[0][j][center];
+					double xxi = i;
+					double yyi = j;
+					int color = IzingModel[i][j][center];
 
-					IzingModel[i + 1][j + 1][center] = vec[i][j][center];
-
+					if (color == -1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &white_circle);
+					}
+					else if (color == 1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &black_circle);
+					}
 				}
 			}
 		}
 		else if (radio_YZ.GetCheck())
 		{
-			for (int j = 0; j < vec[0].size(); j++)
+			for (int j = 0; j < IzingModel[0].size(); j++)
 			{
-				IzingModel[center][j + 1][0] = vec[center][j][vec.size() - 1];
-				IzingModel[center][j + 1][IzingModel.size() - 1] = vec[center][j][0];
-
-				for (int k = 0; k < vec[0][j].size(); k++)
+				for (int k = 0; k < IzingModel[0][j].size(); k++)
 				{
-					IzingModel[center][0][k + 1] = vec[center][vec.size() - 1][k];
-					IzingModel[center][IzingModel.size() - 1][k + 1] = vec[center][0][k];
+					double xxi = j;
+					double yyi = k;
+					int color = IzingModel[center][j][k];
 
-					IzingModel[center][j + 1][k + 1] = vec[center][j][k];
+					if (color == -1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &white_circle);
+					}
+					else if (color == 1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &black_circle);
+					}
 				}
 			}
 		}
 		else if (radio_ZX.GetCheck())
 		{
-			for (int i = 0; i < vec.size(); i++)
+			for (int i = 0; i < IzingModel.size(); i++)
 			{
-				IzingModel[i + 1][center][0] = vec[i][center][vec.size() - 1];
-				IzingModel[i + 1][center][IzingModel[i][0].size() - 1] = vec[i][center][0];
-				
-				for (int k = 0; k < vec[i][0].size(); k++)
+				for (int k = 0; k < IzingModel[i][0].size(); k++)
 				{
-					IzingModel[0][center][k + 1] = vec[vec.size() - 1][center][k];
-					IzingModel[IzingModel.size() - 1][center][k + 1] = vec[0][center][k];
+					double xxi = i;
+					double yyi = k;
+					int color = IzingModel[i][center][k];
 
-					IzingModel[i + 1][center][k + 1] = vec[i][center][k];
+					if (color == -1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &white_circle);
+					}
+					else if (color == 1)
+					{
+						MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
+						CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
+						LPCRECT lpRect = rect;
+						MemDc->FillRect(lpRect, &black_circle);
+					}
 				}
 			}
 		}
-	}
-	else
-	{
-		IzingModel = vec;
-	}
 
-	// РЫБА
-	if (radio_XY.GetCheck())
-	{
-		for (int i = 0; i < IzingModel.size(); i++)
+		if (check_GU.GetCheck())
 		{
-			for (int j = 0; j < IzingModel[i].size(); j++)
-			{
-				double xxi = i;
-				double yyi = j;
-				int color = IzingModel[i][j][center];
-
-				if (color == -1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &white_circle);
-				}
-				else if (color == 1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &black_circle);
-				}
-			}
+			MemDc->SelectObject(&line_pen);
+			MemDc->MoveTo(DOTSIMAGE(1, 1));
+			MemDc->LineTo(DOTSIMAGE(1, vec.size() + 1));
+			MemDc->LineTo(DOTSIMAGE(vec.size() + 1, vec.size() + 1));
+			MemDc->LineTo(DOTSIMAGE(vec.size() + 1, 1));
+			MemDc->LineTo(DOTSIMAGE(1, 1));
 		}
-	}
-	else if (radio_YZ.GetCheck())
-	{
-		for (int j = 0; j < IzingModel[0].size(); j++)
-		{
-			for (int k = 0; k < IzingModel[0][j].size(); k++)
-			{
-				double xxi = j;
-				double yyi = k;
-				int color = IzingModel[center][j][k];
-
-				if (color == -1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &white_circle);
-				}
-				else if (color == 1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &black_circle);
-				}
-			}
-		}
-	}
-	else if (radio_ZX.GetCheck())
-	{
-		for (int i = 0; i < IzingModel.size(); i++)
-		{
-			for (int k = 0; k < IzingModel[i][0].size(); k++)
-			{
-				double xxi = i;
-				double yyi = k;
-				int color = IzingModel[i][center][k];
-
-				if (color == -1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &white_circle);
-				}
-				else if (color == 1)
-				{
-					MemDc->MoveTo(DOTSIMAGE(xxi, yyi));
-					CRect rect(DOTSIMAGE(xxi, yyi + 1), DOTSIMAGE(xxi + 1, yyi));
-					LPCRECT lpRect = rect;
-					MemDc->FillRect(lpRect, &black_circle);
-				}
-			}
-		}
-	}
-
-	if (check_GU.GetCheck())
-	{
-		MemDc->SelectObject(&line_pen);
-		MemDc->MoveTo(DOTSIMAGE(1, 1));
-		MemDc->LineTo(DOTSIMAGE(1, vec.size()+1));
-		MemDc->LineTo(DOTSIMAGE(vec.size() + 1, vec.size() + 1));
-		MemDc->LineTo(DOTSIMAGE(vec.size() + 1, 1));
-		MemDc->LineTo(DOTSIMAGE(1, 1));
 	}
 
 	// вывод на экран
@@ -419,14 +421,17 @@ Iter select_randomly(Iter start, Iter end) {
 
 vector<int> CIzingModelDlg::BorderConditions(int rand_idx) {
 	vector<int> neigbours;
+	// Если выбран не граничный атом.
 	if (rand_idx > 0 && rand_idx < value_size - 1) {
 		neigbours.push_back(rand_idx - 1);
 		neigbours.push_back(rand_idx + 1);
 	}
+	// Если выбран атом на левой границе.
 	else if (rand_idx == 0) {
 		neigbours.push_back(value_size - 1);
 		neigbours.push_back(rand_idx + 1);
 	}
+	// Если выбран атом на правой границе.
 	else if (rand_idx == value_size - 1) {
 		neigbours.push_back(rand_idx - 1);
 		neigbours.push_back(0);
@@ -450,23 +455,25 @@ double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_
 		double energy_last_cfg = 0.0;
 		double energy_new_cfg = 0.0;
 		for (int idx = 0; idx < neig_i.size(); idx++) {
-			energy_last_cfg += vecIzingModel[i][j][k] * neig_i[idx] +
-				vecIzingModel[i][j][k] * neig_j[idx] +
-				vecIzingModel[i][j][k] * neig_k[idx] +
-				vecIzingModel[n_i][n_j][n_k] * neig_n_i[idx] +
-				vecIzingModel[n_i][n_j][n_k] * neig_n_j[idx] +
-				vecIzingModel[n_i][n_j][n_k] * neig_n_k[idx];
+			energy_last_cfg += vecIzingModel[i][j][k] * neig_i[idx];
+			energy_last_cfg += vecIzingModel[i][j][k] * neig_j[idx];
+			energy_last_cfg += vecIzingModel[i][j][k] * neig_k[idx];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_i[idx];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_j[idx];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_k[idx];
 
-			energy_new_cfg += new_cfg[i][j][k] * neig_i[idx] +
-				new_cfg[i][j][k] * neig_j[idx] +
-				new_cfg[i][j][k] * neig_k[idx] +
-				new_cfg[n_i][n_j][n_k] * neig_n_i[idx] +
-				new_cfg[n_i][n_j][n_k] * neig_n_j[idx] +
-				new_cfg[n_i][n_j][n_k] * neig_n_k[idx];
+			energy_new_cfg += new_cfg[i][j][k] * neig_i[idx];
+			energy_new_cfg += new_cfg[i][j][k] * neig_j[idx];
+			energy_new_cfg += new_cfg[i][j][k] * neig_k[idx];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_i[idx];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_j[idx];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_k[idx];
 		}
 
-		energy_last_cfg = -(double)(Ecm / 4.) * energy_last_cfg;
-		energy_new_cfg = -(double)(Ecm / 4.) * energy_new_cfg;
+		energy_last_cfg *= -Ecm;
+		energy_last_cfg /= 2.;
+		energy_new_cfg *= -Ecm;
+		energy_new_cfg /= 2.;
 		double del_energy = energy_new_cfg - energy_last_cfg;
 		return del_energy;
 	}
@@ -492,49 +499,69 @@ void CIzingModelDlg::MonteCarloStep() {
 			int neig_j = rand_j;
 			int neig_k = rand_k;
 
-			vector<int> neigbour_i;
-			vector<int> neigbour_j;
-			vector<int> neigbour_k;
+			// Получение вектора соседей по случайной оси, индексы.
+			vector<int> axis{ 0, 1, 2 };
+			while (!axis.empty()) {
+				int axis_idx = *select_randomly(axis.begin(), axis.end());
+				// Обработка оси X.
+				if (axis_idx == 0) {
+					vector<int> neigbour_i = BorderConditions(rand_i);
+					for (int i = 0; i < neigbour_i.size(); i++) {
+						// Проверка на разносортность.
+						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neigbour_i[i]][neig_j][neig_k]) {
+							neigbour_i.erase(neigbour_i.begin() + i);
+						}
+					}
 
-			// Проверка соседей на предмет наличия противоположного спина.
-			neigbour_i = BorderConditions(rand_i);
-			neigbour_j = BorderConditions(rand_j);
-			neigbour_k = BorderConditions(rand_k);
+					// Проверка оставшихся соседей.
+					if (!neigbour_i.empty()) {
+						int random_idx = rand() % neigbour_i.size();
+						neig_i = neigbour_i[random_idx];
+						break;
+					}
+					else {
+						axis.erase(axis.begin() + axis_idx);
+					}
+				}
+				// Обработка оси Y.
+				else if (axis_idx == 1) {
+					vector<int> neigbour_j = BorderConditions(rand_j);
+					for (int i = 0; i < neigbour_j.size(); i++) {
+						// Проверка на разносортность.
+						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neig_i][neigbour_j[i]][neig_k]) {
+							neigbour_j.erase(neigbour_j.begin() + i);
+						}
+					}
 
-			while (!neigbour_i.empty() || !neigbour_j.empty() || !neigbour_k.empty()) {
-				int axis_idx = RandStaff(0, 2);
-				if (axis_idx == 0 && !neigbour_i.empty()) {
-					// Выбор левого или правого соседа по оси X.
-					int random_idx = rand() % neigbour_i.size();
-					int value_i = neigbour_i[random_idx];
-					if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[value_i][neig_j][neig_k]) {
-						neig_i = value_i;
+					// Проверка оставшихся соседей.
+					if (!neigbour_j.empty()) {
+						int random_idx = rand() % neigbour_j.size();
+						neig_j = neigbour_j[random_idx];
 						break;
 					}
-					// Удаление из рассмотрения просмотренного соседа.
-					neigbour_i.erase(neigbour_i.begin() + random_idx);
+					else {
+						axis.erase(axis.begin() + axis_idx);
+					}
 				}
-				else if (axis_idx == 1 && !neigbour_j.empty()) {
-					// Выбор левого или правого соседа по оси Y.
-					int random_idx = rand() % neigbour_j.size();
-					int value_j = neigbour_j[random_idx];
-					if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[neig_i][value_j][neig_k]) {
-						neig_j = value_j;
+				// Обработка оси Z.
+				else if (axis_idx == 2) {
+					vector<int> neigbour_k = BorderConditions(rand_k);
+					for (int i = 0; i < neigbour_k.size(); i++) {
+						// Проверка на разносортность.
+						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neig_i][neig_j][neigbour_k[i]]) {
+							neigbour_k.erase(neigbour_k.begin() + i);
+						}
+					}
+
+					// Проверка оставшихся соседей.
+					if (!neigbour_k.empty()) {
+						int random_idx = rand() % neigbour_k.size();
+						neig_k = neigbour_k[random_idx];
 						break;
 					}
-					// Удаление из рассмотрения просмотренного соседа.
-					neigbour_j.erase(neigbour_j.begin() + random_idx);
-				}
-				else if (axis_idx == 2 && !neigbour_k.empty()) {
-					// Выбор левого или правого соседа по оси Y.
-					int random_idx = rand() % neigbour_k.size();
-					int value_k = neigbour_k[random_idx];
-					if (vecIzingModel[rand_i][rand_j][rand_k] != vecIzingModel[neig_i][neig_j][value_k]) {
-						neig_k = value_k;
-						break;
+					else {
+						axis.erase(axis.begin() + axis_idx);
 					}
-					// Удаление из рассмотрения просмотренного соседа.
-					neigbour_k.erase(neigbour_k.begin() + random_idx);
 				}
 			}
 
@@ -548,15 +575,14 @@ void CIzingModelDlg::MonteCarloStep() {
 
 				// Расчет энергий, изменения энергии.
 				double hamiltonian = CalculateHamiltonian(rand_i, rand_j, rand_k, neig_i, neig_j, neig_k, new_configuration);
-				if (hamiltonian <= 0) {
+				if (hamiltonian < 0) {
 					vecIzingModel = new_configuration;
 				}
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / RAND_MAX;
-					double arg = (-hamiltonian) / (TEMPERATURE);
-					double exponent = exp(arg);
-					if (random_value <= exponent) {
+					double exponent = exp(-hamiltonian / TEMPERATURE);
+					if (random_value < exponent) {
 						vecIzingModel = new_configuration;
 					}
 				}
