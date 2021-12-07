@@ -19,10 +19,10 @@
 
 CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
-	, value_size(30)
-	, Ecm(1)
-	, TEMPERATURE(0.6)
-	, MKSH_QOUNT(100)
+	, value_size(20)
+	, Ecm(-1)
+	, TEMPERATURE(0.5*T_CRITICAL)
+	, MKSH_QOUNT(510)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -398,11 +398,6 @@ void CIzingModelDlg::OnBnClickedCalculate()
 	// Заполнение глобального вектора.
 	vecIzingModel = IzingModel;
 	DrawImage(vecIzingModel, PicDcImage, PicImage);
-
-	// Очистка локальных векторов.
-	vecHelp1.clear();
-	vecHelp2.clear();
-	IzingModel.clear();
 }
 
 template<typename Iter, typename RandomGenerator>
@@ -455,19 +450,19 @@ double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_
 		double energy_last_cfg = 0.0;
 		double energy_new_cfg = 0.0;
 		for (int idx = 0; idx < neig_i.size(); idx++) {
-			energy_last_cfg += vecIzingModel[i][j][k] * neig_i[idx];
-			energy_last_cfg += vecIzingModel[i][j][k] * neig_j[idx];
-			energy_last_cfg += vecIzingModel[i][j][k] * neig_k[idx];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_i[idx];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_j[idx];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * neig_n_k[idx];
+			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[neig_i[idx]][j][k];
+			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[i][neig_j[idx]][k];
+			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[i][j][neig_k[idx]];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[neig_n_i[idx]][n_j][n_k];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[n_i][neig_n_j[idx]][n_k];
+			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[n_i][n_j][neig_n_k[idx]];
 
-			energy_new_cfg += new_cfg[i][j][k] * neig_i[idx];
-			energy_new_cfg += new_cfg[i][j][k] * neig_j[idx];
-			energy_new_cfg += new_cfg[i][j][k] * neig_k[idx];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_i[idx];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_j[idx];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * neig_n_k[idx];
+			energy_new_cfg += new_cfg[i][j][k] * new_cfg[neig_i[idx]][j][k];
+			energy_new_cfg += new_cfg[i][j][k] * new_cfg[i][neig_j[idx]][k];
+			energy_new_cfg += new_cfg[i][j][k] * new_cfg[i][j][neig_k[idx]];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[neig_n_i[idx]][n_j][n_k];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[n_i][neig_n_j[idx]][n_k];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[n_i][n_j][neig_n_k[idx]];
 		}
 
 		energy_last_cfg *= -Ecm;
@@ -581,7 +576,7 @@ void CIzingModelDlg::MonteCarloStep() {
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / RAND_MAX;
-					double exponent = exp(-hamiltonian / TEMPERATURE);
+					double exponent = exp(-hamiltonian / (K * TEMPERATURE));
 					if (random_value < exponent) {
 						vecIzingModel = new_configuration;
 					}
