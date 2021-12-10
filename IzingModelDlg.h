@@ -4,6 +4,7 @@
 
 #pragma once
 #include <vector>
+#include "CDrawGraph.h"
 using namespace std;
 
 // Диалоговое окно CIzingModelDlg
@@ -41,10 +42,13 @@ protected:
 	CString bStartVisualization = L"Запустить процедуру вычисления";
 	CString bStopVisualization = L"Остановить процедуру вычисления";
 
-	//области рисования
+	// Области рисования.
 	CWnd* PicWndImage;
 	CDC* PicDcImage;
 	CRect PicImage;
+
+	// Диалог построения графиков.
+	CDrawGraph* pGraphDialog = nullptr;
 
 	double xpImage = 0, ypImage = 0,			//коэфициенты пересчета
 		xminImage = -1, xmaxImage = 1,			//максисимальное и минимальное значение х 
@@ -72,6 +76,7 @@ public:
 	CMFCButton button_calculate;
 	CMFCButton button_picture;
 	CMFCButton button_dropping;
+	CMFCButton button_plots;
 	double Ecm;
 	double TEMPERATURE;
 	int MKSH_QOUNT;
@@ -86,4 +91,5 @@ public:
 	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k, vector<vector<vector<int>>> new_cfg);
 	void MonteCarloStep();
 	void MonteCarlo();
+	afx_msg void OnBnClickedOpenGraphDialog();
 };

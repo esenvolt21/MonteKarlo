@@ -8,6 +8,7 @@
 #include <iterator>
 #include <math.h>
 #include <iostream>
+#include "CDrawGraph.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,6 +45,7 @@ void CIzingModelDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_WITH_GRAPH, radio_with_graph);
 	DDX_Control(pDX, IDC_WITHOUT_GRAPH, radio_without_graph);
 	DDX_Control(pDX, IDC_CHECK1, check_GU);
+	DDX_Control(pDX, IDC_OPEN_GRAPH_DIALOG, button_plots);
 }
 
 BEGIN_MESSAGE_MAP(CIzingModelDlg, CDialogEx)
@@ -55,6 +57,7 @@ BEGIN_MESSAGE_MAP(CIzingModelDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_RADIO1, &CIzingModelDlg::OnBnClickedRadio1)
 	ON_BN_CLICKED(IDC_RADIO2, &CIzingModelDlg::OnBnClickedRadio2)
 	ON_BN_CLICKED(IDC_RADIO3, &CIzingModelDlg::OnBnClickedRadio3)
+	ON_BN_CLICKED(IDC_OPEN_GRAPH_DIALOG, &CIzingModelDlg::OnBnClickedOpenGraphDialog)
 END_MESSAGE_MAP()
 
 
@@ -89,6 +92,10 @@ BOOL CIzingModelDlg::OnInitDialog()
 	button_dropping.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
 	button_dropping.m_bTransparent = false;//reg for use bg color
 	button_dropping.SetFaceColor(RGB(0, 255, 255), true);
+
+	button_plots.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_plots.m_bTransparent = false;//reg for use bg color
+	button_plots.SetFaceColor(RGB(0, 255, 255), true);
 
 	// Значения чекпоинтов по умолчанию.
 	radio_YZ.SetCheck(true);
@@ -689,4 +696,16 @@ void CIzingModelDlg::OnBnClickedRadio3()
 	{
 		DrawImage(vecIzingModel, PicDcImage, PicImage);
 	}
+}
+
+void CIzingModelDlg::OnBnClickedOpenGraphDialog()
+{
+	// Обработчик нажатия на кнопку "Открыть окно" (построение графиков зависимостей).
+	if (pGraphDialog == NULL) {
+		pGraphDialog = new CDrawGraph;
+		pGraphDialog->Create(IDD_DRAW_GRAPH);
+		pGraphDialog->ShowWindow(SW_SHOW);
+	}
+
+	pGraphDialog->ShowWindow(SW_SHOW);
 }
