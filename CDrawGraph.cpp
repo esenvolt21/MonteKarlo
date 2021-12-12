@@ -9,6 +9,7 @@
 #include <iterator>
 #include <math.h>
 #include <iostream>
+#include <algorithm>s
 
 
 // Диалоговое окно CDrawGraph
@@ -120,22 +121,23 @@ HCURSOR CDrawGraph::OnQueryDragIcon()
 void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* WinDc, CRect WinPic)
 {
 	//ГРАФИК СИГНАЛА
+	x_max = 1.0;
+	y_max1 = 1.0;
+	x_min = 0.0;
+	y_min1 = 0.0;
+	if (!vec_x.empty() && !vec_y.empty()) {
+		x_max = *max_element(vec_x.begin(), vec_x.end());
+		y_max1 = *max_element(vec_y.begin(), vec_y.end());
+		x_min = *min_element(vec_x.begin(), vec_x.end());
+		y_min1 = *min_element(vec_y.begin(), vec_y.end());
+	}
 
 	//область построения
-	if (vec_x.size() > 1)
-	{
-		xminGraphEnergy = -x_min * 1.1;			//минимальное значение х
-		xmaxGraphEnergy = x_max * 1.1;			//максимальное значение х
-		yminGraphEnergy = y_min1 * 1.1;			//минимальное значение y
-		ymaxGraphEnergy = y_max1 * 1.1;		//максимальное значение y
-	}
-	else
-	{
-		xminGraphEnergy = -1.1;			//минимальное значение х
-		xmaxGraphEnergy = 1.1;			//максимальное значение х
-		yminGraphEnergy = -1.1;			//минимальное значение y
-		ymaxGraphEnergy = 1.1;		//максимальное значение y
-	}
+	xminGraphEnergy = x_min-x_max * 0.1;			//минимальное значение х
+	xmaxGraphEnergy = x_max * 1.1;			//максимальное значение х
+	yminGraphEnergy = y_min1-y_max1 * 0.1;			//минимальное значение y
+	ymaxGraphEnergy = y_max1 * 1.1;		//максимальное значение y
+
 	// создание контекста устройства
 	CBitmap bmp;
 	CDC* MemDc;
@@ -183,7 +185,7 @@ void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* Win
 	MemDc->SelectObject(&setka_pen);
 
 	//отрисовка сетки по y
-	for (double x = xminGraphEnergy; x <= xmaxGraphEnergy; x += xmaxGraphEnergy / scale / 8)
+	for (double x = xminGraphEnergy; x <= xmaxGraphEnergy; x += xmaxGraphEnergy / scale / 4)
 	{
 		if (x != 0)
 		{
@@ -207,7 +209,7 @@ void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* Win
 
 	// установка шрифта
 	CFont font;
-	font.CreateFontW(16, 0, 0, 0, FW_HEAVY, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS || CLIP_LH_ANGLES, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Century Gothic"));
+	font.CreateFontW(10, 0, 0, 0, FW_HEAVY, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS || CLIP_LH_ANGLES, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Century Gothic"));
 	MemDc->SelectObject(&font);
 
 	//подпись осей
@@ -215,28 +217,27 @@ void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* Win
 	MemDc->TextOutW(DOTSGRAPHENERGYTEMP(xmaxGraphEnergy - 15, 0.1), _T("х"));		//X
 
 	//по Y с шагом 5
-	for (double i = 0; i <= ymaxGraphEnergy; i += ymaxGraphEnergy / scale / 8)
+	for (double i = 0; i <= ymaxGraphEnergy; i += ymaxGraphEnergy / scale / 4)
 	{
 		CString str;
 		if (i != 0)
 		{
-			str.Format(_T("%.2f"), i / scale + defaultY0 / scale);
-			MemDc->TextOutW(DOTSGRAPHENERGYTEMP(defaultX0 + xminGraphEnergy / 2, i + 0.03 * ymaxGraphEnergy), str);
+			str.Format(_T("%.1f"), i / scale + defaultY0 / scale);
+			MemDc->TextOutW(DOTSGRAPHENERGYTEMP(defaultX0 + xminGraphEnergy / 2, i + 0.001 * ymaxGraphEnergy), str);
 		}
 	}
 	//по X с шагом 0.5
-	for (double j = xminGraphEnergy; j <= xmaxGraphEnergy; j += xmaxGraphEnergy / scale / 8)
+	for (double j = xminGraphEnergy; j <= xmaxGraphEnergy; j += xmaxGraphEnergy / scale / 4)
 	{
-		double o = 0.0 / scale;
 		CString str;
-		if (j != o)
+		if (j != 0)
 		{
-			str.Format(_T("%.2f"), j / scale - defaultX0 / scale);
-			MemDc->TextOutW(DOTSGRAPHENERGYTEMP(j - xmaxGraphEnergy / 100, -defaultY0 - 0.02), str);
+			str.Format(_T("%.1f"), j / scale - defaultX0 / scale);
+			MemDc->TextOutW(DOTSGRAPHENERGYTEMP(j, -defaultY0 - 0.02), str);
 		}
 	}
 
-	if (vec_x.size() == vec_y.size() && vec_x.size() > 1)
+	if (vec_x.size() == vec_y.size() && !vec_y.empty())
 	{
 		// отрисовка
 		MemDc->MoveTo(DOTSGRAPHENERGYTEMP(vec_x[0], vec_y[0]));
@@ -256,10 +257,21 @@ void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* Win
 void CDrawGraph::DrawCapacity(vector<double> vec_x, vector<double> vec_y, CDC* WinDc, CRect WinPic)
 {
 	//ГРАФИК СИГНАЛА
+	x_max = 1.0;
+	y_max2 = 1.0;
+	x_min = 0.0;
+	y_min2 = 0.0;
+	if (!vec_x.empty() && !vec_y.empty()) {
+		x_max = *max_element(vec_x.begin(), vec_x.end());
+		y_max2 = *max_element(vec_y.begin(), vec_y.end());
+		x_min = *min_element(vec_x.begin(), vec_x.end());
+		y_min2 = *min_element(vec_y.begin(), vec_y.end());
+	}
+
 	//область построения
-	xminGraphСapacity = -x_min * 1.1;			//минимальное значение х
-	xmaxGraphСapacity = x_max * 1.1;		//максимальное значение х
-	yminGraphСapacity = y_min2 * 1.1;			//минимальное значение y
+	xminGraphСapacity = x_min - x_max * 0.1;			//минимальное значение х
+	xmaxGraphСapacity = x_max * 1.1;			//максимальное значение х
+	yminGraphСapacity = y_min2 - y_max2 * 0.1;			//минимальное значение y
 	ymaxGraphСapacity = y_max2 * 1.1;		//максимальное значение y
 
 	// создание контекста устройства
@@ -309,7 +321,7 @@ void CDrawGraph::DrawCapacity(vector<double> vec_x, vector<double> vec_y, CDC* W
 	MemDc->SelectObject(&setka_pen);
 
 	//отрисовка сетки по y
-	for (double x = xminGraphСapacity; x <= xmaxGraphСapacity; x += xmaxGraphСapacity / scale / 8)
+	for (double x = xminGraphСapacity; x <= xmaxGraphСapacity; x += xmaxGraphСapacity / scale / 4)
 	{
 		if (x != 0)
 		{
@@ -329,11 +341,11 @@ void CDrawGraph::DrawCapacity(vector<double> vec_x, vector<double> vec_y, CDC* W
 
 	// установка прозрачного фона текста
 	MemDc->SetBkMode(TRANSPARENT);
-	MemDc->SetTextColor(RGB(255, 255, 255));
+	MemDc->SetTextColor(RGB(0, 0, 0));
 
 	// установка шрифта
 	CFont font;
-	font.CreateFontW(16, 0, 0, 0, FW_HEAVY, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS || CLIP_LH_ANGLES, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Century Gothic"));
+	font.CreateFontW(10, 0, 0, 0, FW_HEAVY, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS || CLIP_LH_ANGLES, DEFAULT_QUALITY, DEFAULT_PITCH, _T("Century Gothic"));
 	MemDc->SelectObject(&font);
 
 	//подпись осей
@@ -341,28 +353,27 @@ void CDrawGraph::DrawCapacity(vector<double> vec_x, vector<double> vec_y, CDC* W
 	MemDc->TextOutW(DOTSGRAPHCAPACITYTEMP(xmaxGraphСapacity - 15, 0.1), _T("х"));		//X
 
 	//по Y с шагом 5
-	for (double i = 0; i <= ymaxGraphСapacity; i += ymaxGraphСapacity / scale / 8)
+	for (double i = 0; i <= ymaxGraphСapacity; i += ymaxGraphСapacity / scale / 4)
 	{
 		CString str;
 		if (i != 0)
 		{
-			str.Format(_T("%.2f"), i / scale + defaultY0 / scale);
-			MemDc->TextOutW(DOTSGRAPHCAPACITYTEMP(defaultX0 + xminGraphСapacity / 2, i + 0.03 * ymaxGraphСapacity), str);
+			str.Format(_T("%.1f"), i / scale + defaultY0 / scale);
+			MemDc->TextOutW(DOTSGRAPHCAPACITYTEMP(defaultX0 + xminGraphСapacity / 2, i + 0.001 * ymaxGraphСapacity), str);
 		}
 	}
 	//по X с шагом 0.5
-	for (double j = xminGraphСapacity; j <= xmaxGraphСapacity; j += xmaxGraphСapacity / scale / 8)
+	for (double j = xminGraphСapacity; j <= xmaxGraphСapacity; j += xmaxGraphСapacity / scale / 4)
 	{
-		double o = 0.0 / scale;
 		CString str;
-		if (j != o)
+		if (j != 0)
 		{
-			str.Format(_T("%.0f"), j / scale - defaultX0 / scale);
-			MemDc->TextOutW(DOTSGRAPHCAPACITYTEMP(j - xmaxGraphСapacity / 100, -defaultY0 - 0.02), str);
+			str.Format(_T("%.1f"), j / scale - defaultX0 / scale);
+			MemDc->TextOutW(DOTSGRAPHCAPACITYTEMP(j, -defaultY0 - 0.02), str);
 		}
 	}
 
-	if (vec_x.size() == vec_y.size() && vec_x.size() > 1)
+	if (vec_x.size() == vec_y.size() && !vec_y.empty())
 	{
 		// отрисовка
 		MemDc->MoveTo(DOTSGRAPHCAPACITYTEMP(vec_x[0], vec_y[0]));
@@ -407,6 +418,7 @@ void CDrawGraph::CalculateGraphs() {
 	char current_step[100];
 	char current_temp[100];
 	int THRESHOLD_MKSH = 20;
+	pParent->Ecm = 1;
 
 	// Энергия.
 	Energy enrg;
@@ -414,10 +426,10 @@ void CDrawGraph::CalculateGraphs() {
 	vector<double> y_capacity;
 	vector<double> x;
 
-	vector<vector<vector<int>>> conf = pParent->GenerateConfiguration(size);
-
 	for (double t = start_temp; t < stop_temp; t += step) {
 		pParent->TEMPERATURE = t;
+
+		vector<vector<vector<int>>> conf = pParent->GenerateConfiguration(size);
 
 		for (int mksh = 0; mksh < mksh_count; mksh++) {
 			// Вывод иинформации на экран.
@@ -428,11 +440,11 @@ void CDrawGraph::CalculateGraphs() {
 
 			pParent->MonteCarloStep(conf, size * size * size, false);
 
-			if (mksh > pParent->THRESHOLD_MKSH) {
+			if (mksh > THRESHOLD_MKSH) {
 				for (int i = 0; i < conf.size(); i++) {
 					for (int j = 0; j < conf[i].size(); j++) {
 						for (int k = 0; k < conf[i][j].size(); k++) {
-							vector<int> nei_i = pParent->BorderConditions(conf.size(), i);
+							vector<int> nei_i = pParent->BorderConditions(conf.sыize(), i);
 							vector<int> nei_j = pParent->BorderConditions(conf[i].size(), j);
 							vector<int> nei_k = pParent->BorderConditions(conf[i][j].size(), k);
 							double sum = 0.0;
@@ -448,15 +460,11 @@ void CDrawGraph::CalculateGraphs() {
 		}
 
 		// Усреднение.
-		enrg.energy /= (mksh_count - THRESHOLD_MKSH);
-		enrg.energy /= size * size * size;
-		enrg.pow_energy /= (mksh_count - THRESHOLD_MKSH);
-		enrg.pow_energy /= size * size * size;
+		enrg.energy /= ((mksh_count - THRESHOLD_MKSH) * size * size * size);
+		enrg.pow_energy /= ((mksh_count - THRESHOLD_MKSH) * size * size * size);
 
 		// Теплоемкость.
-		double capacity = 1. / (size * size * size);
-		capacity *= 1. / (K * K * t * t);
-		capacity *= enrg.pow_energy - enrg.energy;
+		double capacity = (enrg.pow_energy - enrg.energy * enrg.energy) / (K * K * t * t * size * size * size);
 
 		x.push_back(t);
 		y_energy.push_back(enrg.energy);

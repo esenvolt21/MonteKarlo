@@ -100,6 +100,7 @@ BOOL CIzingModelDlg::OnInitDialog()
 	// Значения чекпоинтов по умолчанию.
 	radio_YZ.SetCheck(true);
 	radio_with_graph.SetCheck(true);
+	UpdateData(TRUE);
 
 	return TRUE;  // возврат значения TRUE, если фокус не передан элементу управления
 }
