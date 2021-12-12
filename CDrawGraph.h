@@ -56,10 +56,17 @@ public:
 	int scale = 1;
 	double defaultX0 = 0.0;
 	double defaultY0 = 0.0;
+	double x_min = 0.0;
+	double x_max = 0.0;
+	double y_min1 = 0.0;
+	double y_max1 = 0.0;
+	double y_min2 = 0.0;
+	double y_max2 = 0.0;
 
 	void DrawEnergy(vector<double> x, vector<double> y,CDC* WinDc, CRect WinPic);
-	void DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic);
+	void DrawCapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic);
 	void CalculateGraphs();
+	void Mashtab(vector<double>& solve_buff, double* mmin, double* mmax);
 	
 	afx_msg HCURSOR OnQueryDragIcon();
 	afx_msg void OnBnClickedCalcButton();

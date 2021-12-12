@@ -117,16 +117,25 @@ HCURSOR CDrawGraph::OnQueryDragIcon()
 	return CDialogEx::OnQueryDragIcon();
 }
 
-void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic)
+void CDrawGraph::DrawEnergy(vector<double> vec_x, vector<double> vec_y, CDC* WinDc, CRect WinPic)
 {
 	//ГРАФИК СИГНАЛА
 
 	//область построения
-	xminGraphEnergy = - 5;			//минимальное значение х
-	xmaxGraphEnergy =  10;			//максимальное значение х
-	yminGraphEnergy =  -5;			//минимальное значение y
-	ymaxGraphEnergy =  10;		//максимальное значение y
-
+	if (vec_x.size() > 1)
+	{
+		xminGraphEnergy = -x_min * 1.1;			//минимальное значение х
+		xmaxGraphEnergy = x_max * 1.1;			//максимальное значение х
+		yminGraphEnergy = y_min1 * 1.1;			//минимальное значение y
+		ymaxGraphEnergy = y_max1 * 1.1;		//максимальное значение y
+	}
+	else
+	{
+		xminGraphEnergy = -1.1;			//минимальное значение х
+		xmaxGraphEnergy = 1.1;			//максимальное значение х
+		yminGraphEnergy = -1.1;			//минимальное значение y
+		ymaxGraphEnergy = 1.1;		//максимальное значение y
+	}
 	// создание контекста устройства
 	CBitmap bmp;
 	CDC* MemDc;
@@ -155,6 +164,12 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 		PS_SOLID,				//сплошная линия
 		3,						//толщина 3 пикселя
 		RGB(0, 0, 0));			//цвет white
+
+	CPen ellips;
+	ellips.CreatePen(
+		PS_SOLID,				//сплошная линия
+		5,						//толщина 2 пикселя
+		RGB(0, 0, 255));			//цвет blue
 
 	MemDc->SelectObject(&osi_pen);
 
@@ -216,8 +231,20 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 		CString str;
 		if (j != o)
 		{
-			str.Format(_T("%.0f"), j / scale - defaultX0 / scale);
+			str.Format(_T("%.2f"), j / scale - defaultX0 / scale);
 			MemDc->TextOutW(DOTSGRAPHENERGYTEMP(j - xmaxGraphEnergy / 100, -defaultY0 - 0.02), str);
+		}
+	}
+
+	if (vec_x.size() == vec_y.size() && vec_x.size() > 1)
+	{
+		// отрисовка
+		MemDc->MoveTo(DOTSGRAPHENERGYTEMP(vec_x[0], vec_y[0]));
+		for (int i = 0; i < vec_x.size(); i++)
+		{
+			MemDc->SelectObject(&ellips);
+			MemDc->Ellipse(DOTSGRAPHENERGYTEMP(vec_x[i] - 0.005, vec_y[i] - 0.001),
+				DOTSGRAPHENERGYTEMP(vec_x[i] + 0.005, vec_y[i] + 0.001));
 		}
 	}
 
@@ -226,15 +253,14 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 	delete MemDc;
 }
 
-void CDrawGraph::DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic)
+void CDrawGraph::DrawCapacity(vector<double> vec_x, vector<double> vec_y, CDC* WinDc, CRect WinPic)
 {
 	//ГРАФИК СИГНАЛА
-
 	//область построения
-	xminGraphСapacity = - 5;			//минимальное значение х
-	xmaxGraphСapacity =  10;			//максимальное значение х
-	yminGraphСapacity = -5;			//минимальное значение y
-	ymaxGraphСapacity = 10;		//максимальное значение y
+	xminGraphСapacity = -x_min * 1.1;			//минимальное значение х
+	xmaxGraphСapacity = x_max * 1.1;		//максимальное значение х
+	yminGraphСapacity = y_min2 * 1.1;			//минимальное значение y
+	ymaxGraphСapacity = y_max2 * 1.1;		//максимальное значение y
 
 	// создание контекста устройства
 	CBitmap bmp;
@@ -251,7 +277,7 @@ void CDrawGraph::DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, C
 	CBitmap* pBmp = (CBitmap*)MemDc->SelectObject(&bmp);
 
 	// заливка фона графика белым цветом
-	MemDc->FillSolidRect(WinPic, RGB(0, 0, 0));
+	MemDc->FillSolidRect(WinPic, RGB(255, 255, 255));
 
 	CPen setka_pen;
 	setka_pen.CreatePen(		//для сетки
@@ -263,7 +289,13 @@ void CDrawGraph::DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, C
 	osi_pen.CreatePen(		//для сетки
 		PS_SOLID,				//сплошная линия
 		3,						//толщина 3 пикселя
-		RGB(255, 255, 255));			//цвет white
+		RGB(0, 0, 0));			//цвет white
+
+	CPen ellips;
+	ellips.CreatePen(
+		PS_SOLID,				//сплошная линия
+		5,						//толщина 2 пикселя
+		RGB(255, 255, 0));			//цвет blue
 
 	MemDc->SelectObject(&osi_pen);
 
@@ -330,9 +362,32 @@ void CDrawGraph::DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, C
 		}
 	}
 
+	if (vec_x.size() == vec_y.size() && vec_x.size() > 1)
+	{
+		// отрисовка
+		MemDc->MoveTo(DOTSGRAPHCAPACITYTEMP(vec_x[0], vec_y[0]));
+		for (int i = 0; i < vec_x.size(); i++)
+		{
+			MemDc->SelectObject(&ellips);
+			MemDc->Ellipse(DOTSGRAPHCAPACITYTEMP(vec_x[i] - 0.005, vec_y[i] - 0.005),
+				DOTSGRAPHCAPACITYTEMP(vec_x[i] + 0.005, vec_y[i] + 0.005));
+		}
+	}
+
 	// вывод на экран
 	WinDc->BitBlt(0, 0, widthX, heightY, MemDc, 0, 0, SRCCOPY);
 	delete MemDc;
+}
+
+void CDrawGraph::Mashtab(vector<double>& solve_buff, double* mmin, double* mmax)
+{
+	*mmin = *mmax = solve_buff[0];
+
+	for (int i = 0; i < solve_buff.size(); i++)
+	{
+		if (*mmin > solve_buff[i]) *mmin = solve_buff[i];
+		if (*mmax < solve_buff[i]) *mmax = solve_buff[i];
+	}
 }
 
 void CDrawGraph::CalculateGraphs() {
@@ -340,7 +395,7 @@ void CDrawGraph::CalculateGraphs() {
 
 	// Параметры.
 	double T_CRITICAL = 2.2554;
-	// Постоянная Больцмана, Дж/К
+	// Постоянная Больцмана, Дж/К.
 	double K = 1.380649e-23;
 
 	double start_temp = 0.3 * T_CRITICAL;
@@ -406,8 +461,11 @@ void CDrawGraph::CalculateGraphs() {
 		x.push_back(t);
 		y_energy.push_back(enrg.energy);
 		y_capacity.push_back(capacity);
+		Mashtab(x, &x_min, &x_max);
+		Mashtab(y_energy, &y_min1, &y_max1);
+		Mashtab(y_capacity, &y_min2, &y_max2);
 		DrawEnergy(x, y_energy, PicDcGraphEnergy, PicGraphEnergy);
-		DrawEnergy(x, y_capacity, PicDcGraphCapacity, PicGraphCapacity);
+		DrawCapacity(x, y_capacity, PicDcGraphCapacity, PicGraphCapacity);
 	}
 
 	MessageBox(L"Визуализация успешно завершена!", L"Информация", MB_ICONINFORMATION | MB_OK);
@@ -469,5 +527,5 @@ void CDrawGraph::OnBnClickedClearButton()
 	vector<double> x;
 	vector<double> y;
 	DrawEnergy(x, y, PicDcGraphEnergy, PicGraphEnergy);
-	DrawEnergy(x, y, PicDcGraphCapacity, PicGraphCapacity);
+	DrawCapacity(x, y, PicDcGraphCapacity, PicGraphCapacity);
 }
