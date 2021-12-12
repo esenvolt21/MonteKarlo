@@ -1,4 +1,5 @@
-﻿#include "pch.h"
+﻿#pragma once
+#include "pch.h"
 #include "framework.h"
 #include "IzingModel.h"
 #include "IzingModelDlg.h"
@@ -8,7 +9,6 @@
 #include <iterator>
 #include <math.h>
 #include <iostream>
-#include "CDrawGraph.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,7 +22,7 @@ CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
 	, value_size(20)
 	, Ecm(-1)
-	, TEMPERATURE(0.5*T_CRITICAL)
+	, TEMPERATURE(0.5 * T_CRITICAL)
 	, MKSH_QOUNT(510)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -79,23 +79,23 @@ BOOL CIzingModelDlg::OnInitDialog()
 	PicDcImage = PicWndImage->GetDC();
 	PicWndImage->GetClientRect(&PicImage);
 
-	this->SetBackgroundColor(RGB(147, 112, 219));
+	this->SetBackgroundColor(RGB(153, 204, 255));
 
 	button_calculate.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
 	button_calculate.m_bTransparent = false;//reg for use bg color
-	button_calculate.SetFaceColor(RGB(0, 255, 255), true);
+	button_calculate.SetFaceColor(BUTTONS_COLOR, true);
 
 	button_picture.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
 	button_picture.m_bTransparent = false;//reg for use bg color
-	button_picture.SetFaceColor(RGB(0, 255, 255), true);
+	button_picture.SetFaceColor(BUTTONS_COLOR, true);
 
 	button_dropping.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
 	button_dropping.m_bTransparent = false;//reg for use bg color
-	button_dropping.SetFaceColor(RGB(0, 255, 255), true);
+	button_dropping.SetFaceColor(BUTTONS_COLOR, true);
 
 	button_plots.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
 	button_plots.m_bTransparent = false;//reg for use bg color
-	button_plots.SetFaceColor(RGB(0, 255, 255), true);
+	button_plots.SetFaceColor(BUTTONS_COLOR, true);
 
 	// Значения чекпоинтов по умолчанию.
 	radio_YZ.SetCheck(true);
@@ -186,7 +186,7 @@ void CIzingModelDlg::DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRec
 	CBitmap* pBmp = (CBitmap*)MemDc->SelectObject(&bmp);
 
 	// заливка фона графика
-	MemDc->FillSolidRect(WinxmaxGraphc, RGB(147, 112, 219));
+	MemDc->FillSolidRect(WinxmaxGraphc, RGB(153, 204, 255));
 
 	CPen line_pen;
 	line_pen.CreatePen(		//для сетки
@@ -375,24 +375,21 @@ int CIzingModelDlg::RandStaff(int min, int max)
 	return static_cast<int>(rand() * fraction * (max - min + 1) + min);
 }
 
-void CIzingModelDlg::OnBnClickedCalculate()
-{
-	UpdateData(TRUE);
-
+vector<vector<vector<int>>> CIzingModelDlg::GenerateConfiguration(int size) {
 	// Инициализация 3-х мерного вектора значением -1 (сорт А).
-	vector<int> vecHelp1(value_size, -1);
-	vector<vector<int>> vecHelp2(value_size, vecHelp1);
-	vector<vector<vector<int>>> IzingModel(value_size, vecHelp2);
+	vector<int> vecHelp1(size, -1);
+	vector<vector<int>> vecHelp2(size, vecHelp1);
+	vector<vector<vector<int>>> IzingModel(size, vecHelp2);
 
 	// Расчет количества элементов сорта Б.
-	int size = (value_size * value_size * value_size) / 2;
+	int cell_size = (size * size * size) / 2;
 	int c = 0;
-	while (c < size)
+	while (c < cell_size)
 	{
 		// Рандомно выбираем место в векторе.
-		int i = RandStaff(0, value_size - 1);
-		int j = RandStaff(0, value_size - 1);
-		int k = RandStaff(0, value_size - 1);
+		int i = RandStaff(0, size - 1);
+		int j = RandStaff(0, size - 1);
+		int k = RandStaff(0, size - 1);
 
 		// Меняем сорт А на сорт Б, пока кол-во А != колву Б.
 		if (IzingModel[i][j][k] == -1)
@@ -401,9 +398,15 @@ void CIzingModelDlg::OnBnClickedCalculate()
 			c++;
 		}
 	}
+	return IzingModel;
+}
+
+void CIzingModelDlg::OnBnClickedCalculate()
+{
+	UpdateData(TRUE);
 
 	// Заполнение глобального вектора.
-	vecIzingModel = IzingModel;
+	vecIzingModel = GenerateConfiguration(value_size);
 	DrawImage(vecIzingModel, PicDcImage, PicImage);
 }
 
@@ -421,20 +424,21 @@ Iter select_randomly(Iter start, Iter end) {
 	return select_randomly(start, end, gen);
 }
 
-vector<int> CIzingModelDlg::BorderConditions(int rand_idx) {
+vector<int> CIzingModelDlg::BorderConditions(int size, int rand_idx) {
+	// Для получения всех соседей.
 	vector<int> neigbours;
 	// Если выбран не граничный атом.
-	if (rand_idx > 0 && rand_idx < value_size - 1) {
+	if (rand_idx > 0 && rand_idx < size - 1) {
 		neigbours.push_back(rand_idx - 1);
 		neigbours.push_back(rand_idx + 1);
 	}
 	// Если выбран атом на левой границе.
 	else if (rand_idx == 0) {
-		neigbours.push_back(value_size - 1);
+		neigbours.push_back(size - 1);
 		neigbours.push_back(rand_idx + 1);
 	}
 	// Если выбран атом на правой границе.
-	else if (rand_idx == value_size - 1) {
+	else if (rand_idx == size - 1) {
 		neigbours.push_back(rand_idx - 1);
 		neigbours.push_back(0);
 	}
@@ -442,27 +446,28 @@ vector<int> CIzingModelDlg::BorderConditions(int rand_idx) {
 }
 
 double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
-	vector<vector<vector<int>>> new_cfg) {
-	if (!new_cfg.empty() && !vecIzingModel.empty()) {
+	vector<vector<vector<int>>> last_cfg, vector<vector<vector<int>>> new_cfg) {
+	if (!new_cfg.empty() && !last_cfg.empty()) {
 
+		int size = new_cfg.size();
 		// Получение соседей.
-		vector<int> neig_i = BorderConditions(i);
-		vector<int> neig_j = BorderConditions(j);
-		vector<int> neig_k = BorderConditions(k);
+		vector<int> neig_i = BorderConditions(size, i);
+		vector<int> neig_j = BorderConditions(size, j);
+		vector<int> neig_k = BorderConditions(size, k);
 
-		vector<int> neig_n_i = BorderConditions(n_i);
-		vector<int> neig_n_j = BorderConditions(n_j);
-		vector<int> neig_n_k = BorderConditions(n_k);
+		vector<int> neig_n_i = BorderConditions(size, n_i);
+		vector<int> neig_n_j = BorderConditions(size, n_j);
+		vector<int> neig_n_k = BorderConditions(size, n_k);
 
 		double energy_last_cfg = 0.0;
 		double energy_new_cfg = 0.0;
 		for (int idx = 0; idx < neig_i.size(); idx++) {
-			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[neig_i[idx]][j][k];
-			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[i][neig_j[idx]][k];
-			energy_last_cfg += vecIzingModel[i][j][k] * vecIzingModel[i][j][neig_k[idx]];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[neig_n_i[idx]][n_j][n_k];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[n_i][neig_n_j[idx]][n_k];
-			energy_last_cfg += vecIzingModel[n_i][n_j][n_k] * vecIzingModel[n_i][n_j][neig_n_k[idx]];
+			energy_last_cfg += last_cfg[i][j][k] * last_cfg[neig_i[idx]][j][k];
+			energy_last_cfg += last_cfg[i][j][k] * last_cfg[i][neig_j[idx]][k];
+			energy_last_cfg += last_cfg[i][j][k] * last_cfg[i][j][neig_k[idx]];
+			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[neig_n_i[idx]][n_j][n_k];
+			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[n_i][neig_n_j[idx]][n_k];
+			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[n_i][n_j][neig_n_k[idx]];
 
 			energy_new_cfg += new_cfg[i][j][k] * new_cfg[neig_i[idx]][j][k];
 			energy_new_cfg += new_cfg[i][j][k] * new_cfg[i][neig_j[idx]][k];
@@ -484,17 +489,16 @@ double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_
 /**
 Выполнение одного изменения конфигурации.
 **/
-void CIzingModelDlg::MonteCarloStep() {
+void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, int step_count, bool is_need_draw) {
 	// Проверка, что начальная конфигурация существует.
-	if (!vecIzingModel.empty()) {
-		int counter = 0;
+	if (!configuration.empty()) {
+		int current_step = 0;
 		// 1 МКШ.
-		int iteration = value_size * value_size * value_size;
-		while (counter < iteration) {
+		while (current_step < step_count) {
 			// Выбор случайного спина.
-			int rand_i = RandStaff(0, value_size - 1);
-			int rand_j = RandStaff(0, value_size - 1);
-			int rand_k = RandStaff(0, value_size - 1);
+			int rand_i = RandStaff(0, configuration.size() - 1);
+			int rand_j = RandStaff(0, configuration[0].size() - 1);
+			int rand_k = RandStaff(0, configuration[0][0].size() - 1);
 
 			// Индексы соседнего спина.
 			int neig_i = rand_i;
@@ -507,10 +511,10 @@ void CIzingModelDlg::MonteCarloStep() {
 				int axis_idx = *select_randomly(axis.begin(), axis.end());
 				// Обработка оси X.
 				if (axis_idx == 0) {
-					vector<int> neigbour_i = BorderConditions(rand_i);
+					vector<int> neigbour_i = BorderConditions(configuration.size(), rand_i);
 					for (int i = 0; i < neigbour_i.size(); i++) {
 						// Проверка на разносортность.
-						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neigbour_i[i]][neig_j][neig_k]) {
+						if (configuration[rand_i][rand_j][rand_k] == configuration[neigbour_i[i]][neig_j][neig_k]) {
 							neigbour_i.erase(neigbour_i.begin() + i);
 						}
 					}
@@ -527,10 +531,10 @@ void CIzingModelDlg::MonteCarloStep() {
 				}
 				// Обработка оси Y.
 				else if (axis_idx == 1) {
-					vector<int> neigbour_j = BorderConditions(rand_j);
+					vector<int> neigbour_j = BorderConditions(configuration[0].size(), rand_j);
 					for (int i = 0; i < neigbour_j.size(); i++) {
 						// Проверка на разносортность.
-						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neig_i][neigbour_j[i]][neig_k]) {
+						if (configuration[rand_i][rand_j][rand_k] == configuration[neig_i][neigbour_j[i]][neig_k]) {
 							neigbour_j.erase(neigbour_j.begin() + i);
 						}
 					}
@@ -547,10 +551,10 @@ void CIzingModelDlg::MonteCarloStep() {
 				}
 				// Обработка оси Z.
 				else if (axis_idx == 2) {
-					vector<int> neigbour_k = BorderConditions(rand_k);
+					vector<int> neigbour_k = BorderConditions(configuration[0][0].size(), rand_k);
 					for (int i = 0; i < neigbour_k.size(); i++) {
 						// Проверка на разносортность.
-						if (vecIzingModel[rand_i][rand_j][rand_k] == vecIzingModel[neig_i][neig_j][neigbour_k[i]]) {
+						if (configuration[rand_i][rand_j][rand_k] == configuration[neig_i][neig_j][neigbour_k[i]]) {
 							neigbour_k.erase(neigbour_k.begin() + i);
 						}
 					}
@@ -570,30 +574,32 @@ void CIzingModelDlg::MonteCarloStep() {
 			// Если нужный сосед найден - меняется спин, считаются энергии.
 			if ((rand_i + rand_j + rand_k) != (neig_i + neig_j + neig_k)) {
 				// Генерация новой конфигурации.
-				vector<vector<vector<int>>> new_configuration = vecIzingModel;
+				vector<vector<vector<int>>> new_configuration = configuration;
 				int temp = new_configuration[rand_i][rand_j][rand_k];
 				new_configuration[rand_i][rand_j][rand_k] = new_configuration[neig_i][neig_j][neig_k];
 				new_configuration[neig_i][neig_j][neig_k] = temp;
 
 				// Расчет энергий, изменения энергии.
-				double hamiltonian = CalculateHamiltonian(rand_i, rand_j, rand_k, neig_i, neig_j, neig_k, new_configuration);
+				double hamiltonian = CalculateHamiltonian(rand_i, rand_j, rand_k, neig_i, neig_j, neig_k, configuration, new_configuration);
 				if (hamiltonian < 0) {
-					vecIzingModel = new_configuration;
+					configuration = new_configuration;
 				}
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / RAND_MAX;
-					double exponent = exp(-hamiltonian / (K * TEMPERATURE));
+					double exponent = exp(-hamiltonian / (TEMPERATURE));
 					if (random_value < exponent) {
-						vecIzingModel = new_configuration;
+						configuration = new_configuration;
 					}
 				}
 			}
 
-			if (radio_with_graph.GetCheck() == BST_CHECKED) {
-				DrawImage(vecIzingModel, PicDcImage, PicImage);
+			if (is_need_draw) {
+				if (radio_with_graph.GetCheck() == BST_CHECKED) {
+					DrawImage(configuration, PicDcImage, PicImage);
+				}
 			}
-			counter++;
+			current_step++;
 		}
 	}
 }
@@ -609,8 +615,9 @@ void CIzingModelDlg::MonteCarlo() {
 		sprintf_s(step, "%d", counter);
 		CURRENT_MKSH_STEP.SetWindowTextW((CString)step);
 
-		// Выполнение 1 Монте-Карло шага.
-		MonteCarloStep();
+		// Выполнение 1 Монте-Карло шага
+		int steps = value_size * value_size * value_size;
+		MonteCarloStep(vecIzingModel, steps, true);
 		counter++;
 
 		// Условие завершения.
@@ -702,8 +709,8 @@ void CIzingModelDlg::OnBnClickedOpenGraphDialog()
 {
 	// Обработчик нажатия на кнопку "Открыть окно" (построение графиков зависимостей).
 	if (pGraphDialog == NULL) {
-		pGraphDialog = new CDrawGraph;
-		pGraphDialog->Create(IDD_DRAW_GRAPH);
+		pGraphDialog = new CDrawGraph(this);
+		pGraphDialog->Create(IDD_DRAW_GRAPH, this);
 		pGraphDialog->ShowWindow(SW_SHOW);
 	}
 

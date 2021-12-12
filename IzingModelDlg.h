@@ -1,11 +1,15 @@
-﻿
-// IzingModelDlg.h: файл заголовка
-//
-
-#pragma once
+﻿#pragma once
 #include <vector>
 #include "CDrawGraph.h"
 using namespace std;
+
+class Energy
+{
+public:
+	double energy = 0.0;
+	double pow_energy = 0.0;
+	bool is_need_calc = false;
+};
 
 // Диалоговое окно CIzingModelDlg
 class CIzingModelDlg : public CDialogEx
@@ -47,19 +51,22 @@ protected:
 	CDC* PicDcImage;
 	CRect PicImage;
 
+	COLORREF BUTTONS_COLOR = RGB(255, 255, 255);
+
 	// Диалог построения графиков.
 	CDrawGraph* pGraphDialog = nullptr;
 
 	double xpImage = 0, ypImage = 0,			//коэфициенты пересчета
 		xminImage = -1, xmaxImage = 1,			//максисимальное и минимальное значение х 
 		yminImage = -0.5, ymaxImage = 5;			//максисимальное и минимальное значение y
-
+public:
 	// Критическая температура, Ecm/k.
 	double T_CRITICAL = 2.2554;
 	// Постоянная Больцмана, Дж/К
 	double K = 1.380649e-23;
+	// Порог МКШ, с которого начинается расчет энергии.
+	int THRESHOLD_MKSH = 20;
 
-public:
 	afx_msg void OnBnClickedCalculate();
 	afx_msg void OnBnClickedPicture();
 	afx_msg void OnBnClickedDropping();
@@ -86,10 +93,12 @@ public:
 	vector<vector<vector<int>>> vecIzingModel;
 
 	int RandStaff(int min, int max);
+	vector<vector<vector<int>>> GenerateConfiguration(int size);
 	void DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRect WinxmaxGraphc);
-	vector<int> BorderConditions(int rand_idx);
-	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k, vector<vector<vector<int>>> new_cfg);
-	void MonteCarloStep();
+	vector<int> BorderConditions(int size, int rand_idx);
+	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
+		vector<vector<vector<int>>> last_cfg, vector<vector<vector<int>>> new_cfg);
+	void MonteCarloStep(vector<vector<vector<int>>> &configuration, int step_count, bool is_need_draw);
 	void MonteCarlo();
 	afx_msg void OnBnClickedOpenGraphDialog();
 };

@@ -1,7 +1,4 @@
-﻿// CDrawGraph.cpp: файл реализации
-//
-
-#include "pch.h"
+﻿#include "pch.h"
 #include "IzingModel.h"
 #include "afxdialogex.h"
 #include "CDrawGraph.h"
@@ -23,7 +20,7 @@ IMPLEMENT_DYNAMIC(CDrawGraph, CDialog)
 CDrawGraph::CDrawGraph(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_DRAW_GRAPH, pParent)
 {
-
+	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 CDrawGraph::~CDrawGraph()
@@ -33,15 +30,17 @@ CDrawGraph::~CDrawGraph()
 void CDrawGraph::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_CALC_BUTTON, button_calculate);
+	DDX_Control(pDX, IDC_CLEAR_BUTTON, button_clear);
+	DDX_Control(pDX, IDC_CURRENT_STEP, CURRENT_STEP);
+	DDX_Control(pDX, IDC_CURRENT_TEMP, CURRENT_TEMPERATURE);
 }
 
 BEGIN_MESSAGE_MAP(CDrawGraph, CDialog)
-	ON_BN_CLICKED(IDC_CALC_ENERGY, &CDrawGraph::OnBnClickedCalcEnergy)
-	ON_BN_CLICKED(IDC_CLEAR_ENERGY, &CDrawGraph::OnBnClickedClearEnergy)
-	ON_BN_CLICKED(IDC_CALC_CAPACITY, &CDrawGraph::OnBnClickedCalcCapacity)
-	ON_BN_CLICKED(IDC_CLEAR_CAPACITY, &CDrawGraph::OnBnClickedClearCapacity)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_CALC_BUTTON, &CDrawGraph::OnBnClickedCalcButton)
+	ON_BN_CLICKED(IDC_CLEAR_BUTTON, &CDrawGraph::OnBnClickedClearButton)
 END_MESSAGE_MAP()
 
 BOOL CDrawGraph::OnInitDialog()
@@ -58,11 +57,19 @@ BOOL CDrawGraph::OnInitDialog()
 	PicDcGraphEnergy = PicWndGraphEnergy->GetDC();
 	PicWndGraphEnergy->GetClientRect(&PicGraphEnergy);
 
-	PicWndGraphСapacity = GetDlgItem(IDC_DRAW_CAPACITY_TEMP);
-	PicDcGraphСapacity = PicWndGraphСapacity->GetDC();
-	PicWndGraphСapacity->GetClientRect(&PicGraphСapacity);
+	PicWndGraphCapacity = GetDlgItem(IDC_DRAW_CAPACITY_TEMP);
+	PicDcGraphCapacity = PicWndGraphCapacity->GetDC();
+	PicWndGraphCapacity->GetClientRect(&PicGraphCapacity);
 
-	this->SetBackgroundColor(RGB(147, 112, 219));
+	button_calculate.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_calculate.m_bTransparent = false;//reg for use bg color
+	button_calculate.SetFaceColor(BUTTONS_COLOR, true);
+
+	button_clear.m_nFlatStyle = CMFCButton::BUTTONSTYLE_NOBORDERS;//required for flatering and use bg color
+	button_clear.m_bTransparent = false;//reg for use bg color
+	button_clear.SetFaceColor(BUTTONS_COLOR, true);
+
+	hThreadGraphs = NULL;
 
 	// TODO:  Добавить дополнительную инициализацию
 
@@ -72,6 +79,12 @@ BOOL CDrawGraph::OnInitDialog()
 
 void CDrawGraph::OnPaint()
 {
+	CPaintDC dc(this);
+	CRect rect;
+	GetClientRect(&rect);
+	CBrush brush;
+	brush.CreateSolidBrush(RGB(153, 204, 255));
+	dc.FillRect(&rect, &brush);
 	if (IsIconic())
 	{
 		CPaintDC dc(this); // device context for painting
@@ -129,7 +142,7 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 	CBitmap* pBmp = (CBitmap*)MemDc->SelectObject(&bmp);
 
 	// заливка фона графика белым цветом
-	MemDc->FillSolidRect(WinPic, RGB(0, 0, 0));
+	MemDc->FillSolidRect(WinPic, RGB(255, 255, 255));
 
 	CPen setka_pen;
 	setka_pen.CreatePen(		//для сетки
@@ -141,7 +154,7 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 	osi_pen.CreatePen(		//для сетки
 		PS_SOLID,				//сплошная линия
 		3,						//толщина 3 пикселя
-		RGB(255, 255, 255));			//цвет white
+		RGB(0, 0, 0));			//цвет white
 
 	MemDc->SelectObject(&osi_pen);
 
@@ -175,7 +188,7 @@ void CDrawGraph::DrawEnergy(vector<double> x, vector<double> y, CDC* WinDc, CRec
 
 	// установка прозрачного фона текста
 	MemDc->SetBkMode(TRANSPARENT);
-	MemDc->SetTextColor(RGB(255, 255, 255));
+	MemDc->SetTextColor(RGB(0, 0, 0));
 
 	// установка шрифта
 	CFont font;
@@ -322,35 +335,139 @@ void CDrawGraph::DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, C
 	delete MemDc;
 }
 
-// Обработчики сообщений CDrawGraph
-void CDrawGraph::OnBnClickedCalcEnergy()
-{
-	vector<double> y;
+void CDrawGraph::CalculateGraphs() {
+	CIzingModelDlg* pParent = (CIzingModelDlg*)GetParent();
+
+	// Параметры.
+	double T_CRITICAL = 2.2554;
+	// Постоянная Больцмана, Дж/К
+	double K = 1.380649e-23;
+
+	double start_temp = 0.3 * T_CRITICAL;
+	double stop_temp = 1.5 * T_CRITICAL;
+	double dots_count = 25;
+	int mksh_count = 50;
+	double step = (stop_temp - start_temp) / dots_count;
+	int size = 20;
+	char current_step[100];
+	char current_temp[100];
+	int THRESHOLD_MKSH = 20;
+
+	// Энергия.
+	Energy enrg;
+	vector<double> y_energy;
+	vector<double> y_capacity;
 	vector<double> x;
+
+	vector<vector<vector<int>>> conf = pParent->GenerateConfiguration(size);
+
+	for (double t = start_temp; t < stop_temp; t += step) {
+		pParent->TEMPERATURE = t;
+
+		for (int mksh = 0; mksh < mksh_count; mksh++) {
+			// Вывод иинформации на экран.
+			sprintf_s(current_step, "%d", mksh);
+			CURRENT_STEP.SetWindowTextW((CString)current_step);
+			sprintf_s(current_temp, "%.3f", t);
+			CURRENT_TEMPERATURE.SetWindowTextW((CString)current_temp);
+
+			pParent->MonteCarloStep(conf, size * size * size, false);
+
+			if (mksh > pParent->THRESHOLD_MKSH) {
+				for (int i = 0; i < conf.size(); i++) {
+					for (int j = 0; j < conf[i].size(); j++) {
+						for (int k = 0; k < conf[i][j].size(); k++) {
+							vector<int> nei_i = pParent->BorderConditions(conf.size(), i);
+							vector<int> nei_j = pParent->BorderConditions(conf[i].size(), j);
+							vector<int> nei_k = pParent->BorderConditions(conf[i][j].size(), k);
+							double sum = 0.0;
+							for (int m = 0; m < nei_i.size(); m++) {
+								sum += nei_i[m] + nei_j[m] + nei_k[m];
+							}
+							enrg.energy += conf[i][j][k] * sum;
+							enrg.pow_energy += conf[i][j][k] * sum * conf[i][j][k] * sum;
+						}
+					}
+				}
+			}
+		}
+
+		// Усреднение.
+		enrg.energy /= (mksh_count - THRESHOLD_MKSH);
+		enrg.energy /= size * size * size;
+		enrg.pow_energy /= (mksh_count - THRESHOLD_MKSH);
+		enrg.pow_energy /= size * size * size;
+
+		// Теплоемкость.
+		double capacity = 1. / (size * size * size);
+		capacity *= 1. / (K * K * t * t);
+		capacity *= enrg.pow_energy - enrg.energy;
+
+		x.push_back(t);
+		y_energy.push_back(enrg.energy);
+		y_capacity.push_back(capacity);
+		DrawEnergy(x, y_energy, PicDcGraphEnergy, PicGraphEnergy);
+		DrawEnergy(x, y_capacity, PicDcGraphCapacity, PicGraphCapacity);
+	}
+
+	MessageBox(L"Визуализация успешно завершена!", L"Информация", MB_ICONINFORMATION | MB_OK);
+	bRunTh = false;
+	button_calculate.SetWindowTextW(bStartVisualization);
+	TerminateThread(hThreadGraphs, 0);
+	CloseHandle(hThreadGraphs);
+	hThreadGraphs = NULL;
+}
+
+DWORD WINAPI CalcGraph(PVOID pv)
+{
+	CDrawGraph* p = (CDrawGraph*)pv;
+	p->CalculateGraphs();
+	return 0;
+}
+
+void CDrawGraph::OnBnClickedCalcButton()
+{
+	UpdateData(TRUE);
+	if (!bRunTh) {
+		button_calculate.SetWindowTextW(bStopVisualization);
+		if (hThreadGraphs == NULL) {
+			hThreadGraphs = CreateThread(NULL, 0, CalcGraph, this, 0, &dwThreadGraphs);
+		}
+		else {
+			ResumeThread(hThreadGraphs);
+		}
+		bRunTh = true;
+	}
+	else {
+		button_calculate.SetWindowTextW(bStartVisualization);
+		bRunTh = false;
+		SuspendThread(hThreadGraphs);
+	}
+}
+
+
+void CDrawGraph::OnBnClickedClearButton()
+{
+	// TODO: добавьте свой код обработчика уведомлений
+	// Остановка потока.
+	if (bRunTh) {
+		bRunTh = false;
+		SuspendThread(hThreadGraphs);
+		button_calculate.SetWindowTextW(bStartVisualization);
+	}
+
+	// Завершение потока.
+	TerminateThread(hThreadGraphs, 0);
+	CloseHandle(hThreadGraphs);
+	hThreadGraphs = NULL;
+
+	CURRENT_STEP.SetWindowTextW(L"");
+	CURRENT_TEMPERATURE.SetWindowTextW(L"");
+
+	// Очистка глобального вектора.
+
+	vector<double> x;
+	vector<double> y;
 	DrawEnergy(x, y, PicDcGraphEnergy, PicGraphEnergy);
-	// TODO: добавьте свой код обработчика уведомлений
+	DrawEnergy(x, y, PicDcGraphCapacity, PicGraphCapacity);
 }
-
-void CDrawGraph::OnBnClickedClearEnergy()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-void CDrawGraph::OnBnClickedCalcCapacity()
-{
-	vector<double> y;
-	vector<double> x;
-	DrawEnergy(x, y, PicDcGraphСapacity, PicGraphСapacity);
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-void CDrawGraph::OnBnClickedClearCapacity()
-{
-	// TODO: добавьте свой код обработчика уведомлений
-}
-
-
-
-
-
-

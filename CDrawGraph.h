@@ -31,9 +31,19 @@ protected:
 	CDC* PicDcGraphEnergy;
 	CRect PicGraphEnergy;
 
-	CWnd* PicWndGraphСapacity;
-	CDC* PicDcGraphСapacity;
-	CRect PicGraphСapacity;
+	CWnd* PicWndGraphCapacity;
+	CDC* PicDcGraphCapacity;
+	CRect PicGraphCapacity;
+
+	// Объекты для создания потока.
+	DWORD dwThreadGraphs;
+	HANDLE hThreadGraphs;
+	BOOL bRunTh = false;
+
+	CString bStartVisualization = L"Запустить процедуру вычисления";
+	CString bStopVisualization = L"Остановить процедуру вычисления";
+
+	COLORREF BUTTONS_COLOR = RGB(255, 255, 255);
 
 	double xpGraphEnergy = 0, ypGraphEnergy = 0,			//коэфициенты пересчета
 		xminGraphEnergy = -1, xmaxGraphEnergy = 1,			//максисимальное и минимальное значение х 
@@ -43,17 +53,19 @@ protected:
 		xminGraphСapacity = -1, xmaxGraphСapacity = 1,			//максисимальное и минимальное значение х 
 		yminGraphСapacity = -0.5, ymaxGraphСapacity = 5;			//максисимальное и минимальное значение y
 public:
-	afx_msg void OnBnClickedCalcEnergy();
-	afx_msg void OnBnClickedClearEnergy();
-	afx_msg void OnBnClickedCalcCapacity();
-	afx_msg void OnBnClickedClearCapacity();
-
 	int scale = 1;
 	double defaultX0 = 0.0;
 	double defaultY0 = 0.0;
 
 	void DrawEnergy(vector<double> x, vector<double> y,CDC* WinDc, CRect WinPic);
 	void DrawСapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic);
+	void CalculateGraphs();
 	
 	afx_msg HCURSOR OnQueryDragIcon();
+	afx_msg void OnBnClickedCalcButton();
+	afx_msg void OnBnClickedClearButton();
+	CMFCButton button_calculate;
+	CMFCButton button_clear;
+	CStatic CURRENT_STEP;
+	CStatic CURRENT_TEMPERATURE;
 };

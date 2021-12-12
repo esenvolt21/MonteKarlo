@@ -29,6 +29,13 @@
 #define IDC_CLEAR_CAPACITY              1018
 #define IDC_DRAW_ENERGY_TEMP            1019
 #define IDC_DRAW_CAPACITY_TEMP          1020
+#define IDC_STATIC_ENERGY               1021
+#define IDC_STATIC_CAPACITY             1022
+#define IDC_CALC_BUTTON                 1023
+#define IDC_CLEAR_BUTTON                1024
+#define IDC_CURRENT_STEP                1025
+#define IDC_CURRENT_STEP2               1026
+#define IDC_CURRENT_TEMP                1026
 
 // Next default values for new objects
 // 
@@ -36,7 +43,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1021
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
