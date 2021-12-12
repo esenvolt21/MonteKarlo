@@ -444,9 +444,9 @@ void CDrawGraph::CalculateGraphs() {
 				for (int i = 0; i < conf.size(); i++) {
 					for (int j = 0; j < conf[i].size(); j++) {
 						for (int k = 0; k < conf[i][j].size(); k++) {
-							vector<int> nei_i = pParent->BorderConditions(conf.size(), i);
-							vector<int> nei_j = pParent->BorderConditions(conf[i].size(), j);
-							vector<int> nei_k = pParent->BorderConditions(conf[i][j].size(), k);
+							vector<int> nei_i = pParent->BorderConditions(conf.size(), i, true);
+							vector<int> nei_j = pParent->BorderConditions(conf[i].size(), j, true);
+							vector<int> nei_k = pParent->BorderConditions(conf[i][j].size(), k, true);
 							double sum = 0.0;
 							for (int m = 0; m < nei_i.size(); m++) {
 								sum += nei_i[m] + nei_j[m] + nei_k[m];

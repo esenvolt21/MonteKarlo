@@ -425,23 +425,39 @@ Iter select_randomly(Iter start, Iter end) {
 	return select_randomly(start, end, gen);
 }
 
-vector<int> CIzingModelDlg::BorderConditions(int size, int rand_idx) {
+vector<int> CIzingModelDlg::BorderConditions(int size, int rand_idx, bool is_for_energy_calc) {
 	// Для получения всех соседей.
 	vector<int> neigbours;
-	// Если выбран не граничный атом.
-	if (rand_idx > 0 && rand_idx < size - 1) {
-		neigbours.push_back(rand_idx - 1);
-		neigbours.push_back(rand_idx + 1);
+	if (!is_for_energy_calc) {
+		// Если выбран не граничный атом.
+		if (rand_idx > 0 && rand_idx < size - 1) {
+			neigbours.push_back(rand_idx - 1);
+			neigbours.push_back(rand_idx + 1);
+		}
+		// Если выбран атом на левой границе.
+		else if (rand_idx == 0) {
+			neigbours.push_back(size - 1);
+			neigbours.push_back(rand_idx + 1);
+		}
+		// Если выбран атом на правой границе.
+		else if (rand_idx == size - 1) {
+			neigbours.push_back(rand_idx - 1);
+			neigbours.push_back(0);
+		}
 	}
-	// Если выбран атом на левой границе.
-	else if (rand_idx == 0) {
-		neigbours.push_back(size - 1);
-		neigbours.push_back(rand_idx + 1);
-	}
-	// Если выбран атом на правой границе.
-	else if (rand_idx == size - 1) {
-		neigbours.push_back(rand_idx - 1);
-		neigbours.push_back(0);
+	else {
+		// Если выбран не граничный атом.
+		if (rand_idx > 0 && rand_idx < size - 1) {
+			neigbours.push_back(rand_idx - 1);
+		}
+		// Если выбран атом на левой границе.
+		else if (rand_idx == 0) {
+			neigbours.push_back(size - 1);
+		}
+		// Если выбран атом на правой границе.
+		else if (rand_idx == size - 1) {
+			neigbours.push_back(rand_idx - 1);
+		}
 	}
 	return neigbours;
 }
@@ -452,36 +468,46 @@ double CIzingModelDlg::CalculateHamiltonian(int i, int j, int k, int n_i, int n_
 
 		int size = new_cfg.size();
 		// Получение соседей.
-		vector<int> neig_i = BorderConditions(size, i);
-		vector<int> neig_j = BorderConditions(size, j);
-		vector<int> neig_k = BorderConditions(size, k);
+		vector<int> neig_i = BorderConditions(size, i, false);
+		vector<int> neig_j = BorderConditions(size, j, false);
+		vector<int> neig_k = BorderConditions(size, k, false);
 
-		vector<int> neig_n_i = BorderConditions(size, n_i);
-		vector<int> neig_n_j = BorderConditions(size, n_j);
-		vector<int> neig_n_k = BorderConditions(size, n_k);
+		vector<int> neig_n_i = BorderConditions(size, n_i, false);
+		vector<int> neig_n_j = BorderConditions(size, n_j, false);
+		vector<int> neig_n_k = BorderConditions(size, n_k, false);
 
 		double energy_last_cfg = 0.0;
 		double energy_new_cfg = 0.0;
 		for (int idx = 0; idx < neig_i.size(); idx++) {
-			energy_last_cfg += last_cfg[i][j][k] * last_cfg[neig_i[idx]][j][k];
-			energy_last_cfg += last_cfg[i][j][k] * last_cfg[i][neig_j[idx]][k];
-			energy_last_cfg += last_cfg[i][j][k] * last_cfg[i][j][neig_k[idx]];
-			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[neig_n_i[idx]][n_j][n_k];
-			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[n_i][neig_n_j[idx]][n_k];
-			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_cfg[n_i][n_j][neig_n_k[idx]];
+			double last_neigs_first = 0.0;
+			double last_neigs_second = 0.0;
+			double new_neigs_first = 0.0;
+			double new_neigs_second = 0.0;
+			last_neigs_first += last_cfg[neig_i[idx]][j][k];
+			last_neigs_first += last_cfg[i][neig_j[idx]][k];
+			last_neigs_first += last_cfg[i][j][neig_k[idx]];
+			energy_last_cfg += last_cfg[i][j][k] * last_neigs_first;
 
-			energy_new_cfg += new_cfg[i][j][k] * new_cfg[neig_i[idx]][j][k];
-			energy_new_cfg += new_cfg[i][j][k] * new_cfg[i][neig_j[idx]][k];
-			energy_new_cfg += new_cfg[i][j][k] * new_cfg[i][j][neig_k[idx]];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[neig_n_i[idx]][n_j][n_k];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[n_i][neig_n_j[idx]][n_k];
-			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_cfg[n_i][n_j][neig_n_k[idx]];
+			last_neigs_second += last_cfg[neig_n_i[idx]][n_j][n_k];
+			last_neigs_second += last_cfg[n_i][neig_n_j[idx]][n_k];
+			last_neigs_second += last_cfg[n_i][n_j][neig_n_k[idx]];
+			energy_last_cfg += last_cfg[n_i][n_j][n_k] * last_neigs_second;
+
+			new_neigs_first += new_cfg[neig_i[idx]][j][k];
+			new_neigs_first += new_cfg[i][neig_j[idx]][k];
+			new_neigs_first += new_cfg[i][j][neig_k[idx]];
+			energy_new_cfg += new_cfg[i][j][k] * new_neigs_first;
+
+			new_neigs_second += new_cfg[neig_n_i[idx]][n_j][n_k];
+			new_neigs_second += new_cfg[n_i][neig_n_j[idx]][n_k];
+			new_neigs_second += new_cfg[n_i][n_j][neig_n_k[idx]];
+			energy_new_cfg += new_cfg[n_i][n_j][n_k] * new_neigs_second;
 		}
-
 		energy_last_cfg *= -Ecm;
 		energy_last_cfg /= 2.;
 		energy_new_cfg *= -Ecm;
 		energy_new_cfg /= 2.;
+
 		double del_energy = energy_new_cfg - energy_last_cfg;
 		return del_energy;
 	}
@@ -512,7 +538,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				int axis_idx = *select_randomly(axis.begin(), axis.end());
 				// Обработка оси X.
 				if (axis_idx == 0) {
-					vector<int> neigbour_i = BorderConditions(configuration.size(), rand_i);
+					vector<int> neigbour_i = BorderConditions(configuration.size(), rand_i, false);
 					for (int i = 0; i < neigbour_i.size(); i++) {
 						// Проверка на разносортность.
 						if (configuration[rand_i][rand_j][rand_k] == configuration[neigbour_i[i]][neig_j][neig_k]) {
@@ -532,7 +558,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				}
 				// Обработка оси Y.
 				else if (axis_idx == 1) {
-					vector<int> neigbour_j = BorderConditions(configuration[0].size(), rand_j);
+					vector<int> neigbour_j = BorderConditions(configuration[0].size(), rand_j, false);
 					for (int i = 0; i < neigbour_j.size(); i++) {
 						// Проверка на разносортность.
 						if (configuration[rand_i][rand_j][rand_k] == configuration[neig_i][neigbour_j[i]][neig_k]) {
@@ -552,7 +578,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				}
 				// Обработка оси Z.
 				else if (axis_idx == 2) {
-					vector<int> neigbour_k = BorderConditions(configuration[0][0].size(), rand_k);
+					vector<int> neigbour_k = BorderConditions(configuration[0][0].size(), rand_k, false);
 					for (int i = 0; i < neigbour_k.size(); i++) {
 						// Проверка на разносортность.
 						if (configuration[rand_i][rand_j][rand_k] == configuration[neig_i][neig_j][neigbour_k[i]]) {
@@ -588,7 +614,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / RAND_MAX;
-					double exponent = exp(-hamiltonian / (TEMPERATURE));
+					double exponent = exp(-hamiltonian / (K * TEMPERATURE));
 					if (random_value < exponent) {
 						configuration = new_configuration;
 					}
