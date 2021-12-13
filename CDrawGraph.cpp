@@ -402,12 +402,12 @@ void CDrawGraph::CalculateGraphs() {
 	double start_temp = 0.3 * T_CRITICAL;
 	double stop_temp = 1.5 * T_CRITICAL;
 	double dots_count = 25;
-	int mksh_count = 200;
+	int mksh_count = 50;
 	double step = (stop_temp - start_temp) / dots_count;
 	int size = 20;
 	char current_step[100];
 	char current_temp[100];
-	int THRESHOLD_MKSH = 100;
+	int THRESHOLD_MKSH = 20;
 	pParent->Ecm = 1;
 	pParent->K = K;
 
