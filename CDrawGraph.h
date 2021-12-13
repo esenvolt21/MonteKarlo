@@ -49,9 +49,9 @@ protected:
 		xminGraphEnergy = -1, xmaxGraphEnergy = 1,			//максисимальное и минимальное значение х 
 		yminGraphEnergy = -0.5, ymaxGraphEnergy = 5;			//максисимальное и минимальное значение y
 
-	double xpGraphСapacity = 0, ypGraphСapacity = 0,			//коэфициенты пересчета
-		xminGraphСapacity = -1, xmaxGraphСapacity = 1,			//максисимальное и минимальное значение х 
-		yminGraphСapacity = -0.5, ymaxGraphСapacity = 5;			//максисимальное и минимальное значение y
+	double xpGraphCapacity = 0, ypGraphCapacity = 0,			//коэфициенты пересчета
+		xminGraphCapacity = -1, xmaxGraphCapacity = 1,			//максисимальное и минимальное значение х 
+		yminGraphCapacity = -0.5, ymaxGraphCapacity = 5;			//максисимальное и минимальное значение y
 public:
 	int scale = 1;
 	double defaultX0 = 0.0;
@@ -64,7 +64,7 @@ public:
 	double y_max2 = 0.0;
 
 	void DrawEnergy(vector<double> x, vector<double> y,CDC* WinDc, CRect WinPic);
-	void DrawCapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic);
+	//void DrawCapacity(vector<double> x, vector<double> y, CDC* WinDc, CRect WinPic);
 	void CalculateGraphs();
 	void Mashtab(vector<double>& solve_buff, double* mmin, double* mmax);
 	

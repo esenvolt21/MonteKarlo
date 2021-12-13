@@ -22,7 +22,7 @@ CIzingModelDlg::CIzingModelDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_IZINGMODEL_DIALOG, pParent)
 	, value_size(20)
 	, Ecm(-1)
-	, TEMPERATURE(0.5 * T_CRITICAL)
+	, TEMPERATURE(1.5 * T_CRITICAL)
 	, MKSH_QOUNT(510)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -411,20 +411,6 @@ void CIzingModelDlg::OnBnClickedCalculate()
 	DrawImage(vecIzingModel, PicDcImage, PicImage);
 }
 
-template<typename Iter, typename RandomGenerator>
-Iter select_randomly(Iter start, Iter end, RandomGenerator& g) {
-	std::uniform_int_distribution<> dis(0, std::distance(start, end) - 1);
-	std::advance(start, dis(g));
-	return start;
-}
-
-template<typename Iter>
-Iter select_randomly(Iter start, Iter end) {
-	static std::random_device rd;
-	static std::mt19937 gen(rd());
-	return select_randomly(start, end, gen);
-}
-
 vector<int> CIzingModelDlg::BorderConditions(int size, int rand_idx) {
 	// Для получения всех соседей.
 	vector<int> neigbours;
@@ -567,7 +553,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / RAND_MAX;
-					double exponent = exp(-hamiltonian / (K * TEMPERATURE));
+					double exponent = exp(-hamiltonian / (TEMPERATURE));
 					if (random_value < exponent) {
 						configuration = new_configuration;
 					}
