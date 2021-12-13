@@ -95,10 +95,9 @@ public:
 	int RandStaff(int min, int max);
 	vector<vector<vector<int>>> GenerateConfiguration(int size);
 	void DrawImage(vector<vector<vector<int>>> vec, CDC* WinDc, CRect WinxmaxGraphc);
-	vector<int> BorderConditions(int size, int rand_idx, bool is_for_energy_calc);
-	double CalculateHamiltonian(int i, int j, int k, int n_i, int n_j, int n_k,
-		vector<vector<vector<int>>> last_cfg, vector<vector<vector<int>>> new_cfg);
-	void MonteCarloStep(vector<vector<vector<int>>> &configuration, int step_count, bool is_need_draw);
+	vector<int> BorderConditions(int size, int rand_idx);
+	double CalculateHamiltonian(vector<vector<vector<int>>> last_cfg, vector<vector<vector<int>>> new_cfg);
+	void MonteCarloStep(vector<vector<vector<int>>> &configuration, int step_count);
 	void MonteCarlo();
 	afx_msg void OnBnClickedOpenGraphDialog();
 };
