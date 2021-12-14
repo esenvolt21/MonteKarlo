@@ -4,7 +4,6 @@
 //
 #define IDD_IZINGMODEL_DIALOG           102
 #define IDR_MAINFRAME                   128
-#define IDD_DRAW_GRAPH                  133
 #define IDC_EDIT1                       1000
 #define IDC_SIZE                        1000
 #define IDC_RADIO1                      1001
@@ -27,15 +26,7 @@
 #define IDC_CLEAR_ENERGY                1016
 #define IDC_CALC_CAPACITY               1017
 #define IDC_CLEAR_CAPACITY              1018
-#define IDC_DRAW_ENERGY_TEMP            1019
-#define IDC_DRAW_CAPACITY_TEMP          1020
-#define IDC_STATIC_ENERGY               1021
-#define IDC_STATIC_CAPACITY             1022
-#define IDC_CALC_BUTTON                 1023
-#define IDC_CLEAR_BUTTON                1024
-#define IDC_CURRENT_STEP                1025
 #define IDC_CURRENT_STEP2               1026
-#define IDC_CURRENT_TEMP                1026
 
 // Next default values for new objects
 // 

@@ -1,6 +1,5 @@
 ﻿#pragma once
 #include <vector>
-#include "CDrawGraph.h"
 using namespace std;
 
 class Energy
@@ -40,7 +39,10 @@ protected:
 	// Объекты для создания потока.
 	DWORD dwThread;
 	HANDLE hThread;
+	DWORD dwThreadGraphs;
+	HANDLE hThreadGraphs;
 	BOOL bRunTh = false;
+	BOOL bRunThGraph = false;
 
 	// Надписи на кнопке визуализации.
 	CString bStartVisualization = L"Запустить процедуру вычисления";
@@ -52,9 +54,6 @@ protected:
 	CRect PicImage;
 
 	COLORREF BUTTONS_COLOR = RGB(255, 255, 255);
-
-	// Диалог построения графиков.
-	CDrawGraph* pGraphDialog = nullptr;
 
 	double xpImage = 0, ypImage = 0,			//коэфициенты пересчета
 		xminImage = -1, xmaxImage = 1,			//максисимальное и минимальное значение х 
@@ -99,5 +98,6 @@ public:
 	double CalculateHamiltonian(vector<vector<vector<int>>> last_cfg, vector<vector<vector<int>>> new_cfg);
 	void MonteCarloStep(vector<vector<vector<int>>> &configuration, int step_count);
 	void MonteCarlo();
+	void CalculateGraphs();
 	afx_msg void OnBnClickedOpenGraphDialog();
 };

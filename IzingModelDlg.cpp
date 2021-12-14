@@ -634,6 +634,18 @@ void CIzingModelDlg::OnBnClickedDropping()
 		button_picture.SetWindowTextW(bStartVisualization);
 	}
 
+	// Остановка потока.
+	if (bRunThGraph) {
+		bRunThGraph = false;
+		SuspendThread(hThreadGraphs);
+		button_plots.SetWindowTextW(bStartVisualization);
+	}
+
+	// Завершение потока.
+	TerminateThread(hThreadGraphs, 0);
+	CloseHandle(hThreadGraphs);
+	hThreadGraphs = NULL;
+
 	// Завершение потока.
 	TerminateThread(hThread, 0);
 	CloseHandle(hThread);
@@ -670,14 +682,98 @@ void CIzingModelDlg::OnBnClickedRadio3()
 	}
 }
 
-void CIzingModelDlg::OnBnClickedOpenGraphDialog()
-{
-	// Обработчик нажатия на кнопку "Открыть окно" (построение графиков зависимостей).
-	if (pGraphDialog == NULL) {
-		pGraphDialog = new CDrawGraph(this);
-		pGraphDialog->Create(IDD_DRAW_GRAPH, this);
-		pGraphDialog->ShowWindow(SW_SHOW);
+void CIzingModelDlg::CalculateGraphs() {
+	double start_temp = 0.3 * T_CRITICAL;
+	double stop_temp = 1.5 * T_CRITICAL;
+	double dots_count = 30;
+	double step = (stop_temp - start_temp) / dots_count;
+	
+	int size = 20;
+	int mksh_count = 60;
+	char current_step[100];
+	char current_temp[100];
+
+	// Энергия.
+	Energy enrg;
+	vector<double> y_energy;
+	vector<double> y_capacity;
+	vector<double> x;
+
+	for (double t = start_temp; t < stop_temp; t += step) {
+		TEMPERATURE = t;
+		vector<vector<vector<int>>> conf = GenerateConfiguration(size);
+
+		for (int mksh = 0; mksh < mksh_count; mksh++) {
+			// Вывод иинформации на экран.
+			sprintf_s(current_step, "%d", mksh);
+			CURRENT_MKSH_STEP.SetWindowTextW((CString)current_step);
+
+			MonteCarloStep(conf, size * size * size);
+
+			if (mksh > THRESHOLD_MKSH) {
+				double energy = 0.0;
+				for (int i = 1; i < conf.size(); i++) {
+					for (int j = 1; j < conf[i].size(); j++) {
+						for (int k = 1; k < conf[i][j].size(); k++) {
+							energy += conf[i][j][k] * (conf[i - 1][j][k] + conf[i][j - 1][k] + conf[i][j][k - 1]);
+						}
+					}
+				}
+				energy *= -Ecm / 2.;
+				enrg.energy += energy;
+				enrg.pow_energy += energy * energy;
+			}
+		}
+
+		// Усреднение.
+		enrg.energy /= (mksh_count - THRESHOLD_MKSH);
+		enrg.energy /= size * size * size;
+		enrg.pow_energy /= (mksh_count - THRESHOLD_MKSH);
+		enrg.pow_energy /= size * size * size;
+
+		// Теплоемкость.
+		double capacity = (enrg.pow_energy - enrg.energy * enrg.energy) / (K * K * t * t * size * size * size);
+
+		ofstream out_x("energy_x.txt", ios_base::app);
+		out_x << t << endl;
+		out_x.close();
+
+		ofstream out_y("energy_y.txt", ios_base::app);
+		out_y << enrg.energy << endl;
+		out_y.close();
 	}
 
-	pGraphDialog->ShowWindow(SW_SHOW);
+	MessageBox(L"Визуализация успешно завершена!", L"Информация", MB_ICONINFORMATION | MB_OK);
+	bRunThGraph = false;
+	button_plots.SetWindowTextW(bStartVisualization);
+	TerminateThread(hThreadGraphs, 0);
+	CloseHandle(hThreadGraphs);
+	hThreadGraphs = NULL;
+}
+
+DWORD WINAPI CalcGraph(PVOID pv)
+{
+	CIzingModelDlg* p = (CIzingModelDlg*)pv;
+	p->CalculateGraphs();
+	return 0;
+}
+
+void CIzingModelDlg::OnBnClickedOpenGraphDialog()
+{
+	UpdateData(TRUE);
+	if (!bRunThGraph) {
+		button_plots.SetWindowTextW(bStopVisualization);
+		if (hThreadGraphs == NULL) {
+			hThreadGraphs = CreateThread(NULL, 0, CalcGraph, this, 0, &dwThreadGraphs);
+		}
+		else {
+			ResumeThread(hThreadGraphs);
+		}
+		bRunThGraph = true;
+	}
+	else {
+		button_plots.SetWindowTextW(bStartVisualization);
+		bRunThGraph = false;
+		SuspendThread(hThreadGraphs);
+	}
 }

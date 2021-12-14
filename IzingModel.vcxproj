@@ -183,7 +183,6 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="CDrawGraph.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="IzingModel.h" />
     <ClInclude Include="IzingModelDlg.h" />
@@ -192,7 +191,6 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CDrawGraph.cpp" />
     <ClCompile Include="IzingModel.cpp" />
     <ClCompile Include="IzingModelDlg.cpp" />
     <ClCompile Include="pch.cpp">
