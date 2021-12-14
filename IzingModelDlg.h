@@ -64,7 +64,7 @@ public:
 	// Постоянная Больцмана, Дж/К
 	double K = 1.380649e-23;
 	// Порог МКШ, с которого начинается расчет энергии.
-	int THRESHOLD_MKSH = 20;
+	int THRESHOLD_MKSH = 100;
 
 	afx_msg void OnBnClickedCalculate();
 	afx_msg void OnBnClickedPicture();

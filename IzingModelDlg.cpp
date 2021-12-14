@@ -683,13 +683,13 @@ void CIzingModelDlg::OnBnClickedRadio3()
 }
 
 void CIzingModelDlg::CalculateGraphs() {
-	double start_temp = 0.3 * T_CRITICAL;
-	double stop_temp = 1.5 * T_CRITICAL;
-	double dots_count = 30;
+	double start_temp = 0.1 * T_CRITICAL;
+	double stop_temp = 2.0 * T_CRITICAL;
+	double dots_count = 60;
 	double step = (stop_temp - start_temp) / dots_count;
 	
 	int size = 20;
-	int mksh_count = 60;
+	int mksh_count = 500;
 	char current_step[100];
 	char current_temp[100];
 
@@ -698,11 +698,12 @@ void CIzingModelDlg::CalculateGraphs() {
 	vector<double> y_energy;
 	vector<double> y_capacity;
 	vector<double> x;
+	vector<vector<vector<int>>> conf = GenerateConfiguration(size);
 
 	for (double t = start_temp; t < stop_temp; t += step) {
 		TEMPERATURE = t;
-		vector<vector<vector<int>>> conf = GenerateConfiguration(size);
-
+		enrg.energy = 0.0;
+		enrg.pow_energy = 0.0;
 		for (int mksh = 0; mksh < mksh_count; mksh++) {
 			// Вывод иинформации на экран.
 			sprintf_s(current_step, "%d", mksh);
@@ -721,18 +722,12 @@ void CIzingModelDlg::CalculateGraphs() {
 				}
 				energy *= -Ecm / 2.;
 				enrg.energy += energy;
-				enrg.pow_energy += energy * energy;
 			}
 		}
 
 		// Усреднение.
 		enrg.energy /= (mksh_count - THRESHOLD_MKSH);
 		enrg.energy /= size * size * size;
-		enrg.pow_energy /= (mksh_count - THRESHOLD_MKSH);
-		enrg.pow_energy /= size * size * size;
-
-		// Теплоемкость.
-		double capacity = (enrg.pow_energy - enrg.energy * enrg.energy) / (K * K * t * t * size * size * size);
 
 		ofstream out_x("energy_x.txt", ios_base::app);
 		out_x << t << endl;
