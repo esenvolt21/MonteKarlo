@@ -552,8 +552,8 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				}
 				else {
 					// Случайное число в диапазоне [0;1].
-					double random_value = (double)(rand()) / RAND_MAX;
-					double exponent = exp(-hamiltonian / (TEMPERATURE));
+					double random_value = (double)(rand()) / (double)RAND_MAX;
+					double exponent = exp(-hamiltonian / (TEMPERATURE / 2.));
 					if (random_value < exponent) {
 						configuration = new_configuration;
 					}
@@ -683,15 +683,16 @@ void CIzingModelDlg::OnBnClickedRadio3()
 }
 
 void CIzingModelDlg::CalculateGraphs() {
-	double start_temp = 0.1 * T_CRITICAL;
-	double stop_temp = 2.0 * T_CRITICAL;
+	double start_temp = 0.5 * T_CRITICAL;
+	double stop_temp = 1.5 * T_CRITICAL;
 	double dots_count = 60;
 	double step = (stop_temp - start_temp) / dots_count;
-	
+
 	int size = 20;
-	int mksh_count = 500;
+	int mksh_count = 20;
 	char current_step[100];
 	char current_temp[100];
+	Ecm = 1;
 
 	// Энергия.
 	Energy enrg;
@@ -704,14 +705,42 @@ void CIzingModelDlg::CalculateGraphs() {
 		TEMPERATURE = t;
 		enrg.energy = 0.0;
 		enrg.pow_energy = 0.0;
-		for (int mksh = 0; mksh < mksh_count; mksh++) {
-			// Вывод иинформации на экран.
-			sprintf_s(current_step, "%d", mksh);
-			CURRENT_MKSH_STEP.SetWindowTextW((CString)current_step);
 
-			MonteCarloStep(conf, size * size * size);
+		if (t == start_temp) {
+			mksh_count += THRESHOLD_MKSH;
+			for (int mksh = 0; mksh < mksh_count; mksh++) {
+				// Вывод иинформации на экран.
+				sprintf_s(current_step, "%d", mksh);
+				CURRENT_MKSH_STEP.SetWindowTextW((CString)current_step);
 
-			if (mksh > THRESHOLD_MKSH) {
+				MonteCarloStep(conf, size * size * size);
+
+				if (mksh > THRESHOLD_MKSH) {
+					double energy = 0.0;
+					for (int i = 1; i < conf.size(); i++) {
+						for (int j = 1; j < conf[i].size(); j++) {
+							for (int k = 1; k < conf[i][j].size(); k++) {
+								energy += conf[i][j][k] * (conf[i - 1][j][k] + conf[i][j - 1][k] + conf[i][j][k - 1]);
+							}
+						}
+					}
+					energy *= -Ecm / 2.;
+					enrg.energy += energy;
+				}
+			}
+			// Усреднение.
+			enrg.energy /= (mksh_count - THRESHOLD_MKSH);
+			enrg.energy /= size * size * size;
+		}
+		else {
+			mksh_count = 20;
+			for (int mksh = 0; mksh < mksh_count; mksh++) {
+				// Вывод иинформации на экран.
+				sprintf_s(current_step, "%d", mksh);
+				CURRENT_MKSH_STEP.SetWindowTextW((CString)current_step);
+
+				MonteCarloStep(conf, size * size * size);
+
 				double energy = 0.0;
 				for (int i = 1; i < conf.size(); i++) {
 					for (int j = 1; j < conf[i].size(); j++) {
@@ -723,11 +752,10 @@ void CIzingModelDlg::CalculateGraphs() {
 				energy *= -Ecm / 2.;
 				enrg.energy += energy;
 			}
+			// Усреднение.
+			enrg.energy /= (mksh_count);
+			enrg.energy /= size * size * size;
 		}
-
-		// Усреднение.
-		enrg.energy /= (mksh_count - THRESHOLD_MKSH);
-		enrg.energy /= size * size * size;
 
 		ofstream out_x("energy_x.txt", ios_base::app);
 		out_x << t << endl;
