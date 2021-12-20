@@ -553,7 +553,7 @@ void CIzingModelDlg::MonteCarloStep(vector<vector<vector<int>>>& configuration, 
 				else {
 					// Случайное число в диапазоне [0;1].
 					double random_value = (double)(rand()) / (double)RAND_MAX;
-					double exponent = exp(-hamiltonian / (TEMPERATURE / 2.));
+					double exponent = exp(-hamiltonian / (TEMPERATURE));
 					if (random_value < exponent) {
 						configuration = new_configuration;
 					}
@@ -683,13 +683,14 @@ void CIzingModelDlg::OnBnClickedRadio3()
 }
 
 void CIzingModelDlg::CalculateGraphs() {
-	double start_temp = 0.5 * T_CRITICAL;
-	double stop_temp = 1.5 * T_CRITICAL;
+	double start_temp = 0.2 * T_CRITICAL;
+	double stop_temp = 0.5 * T_CRITICAL;
 	double dots_count = 60;
 	double step = (stop_temp - start_temp) / dots_count;
+	//double step = 0.01;
 
 	int size = 20;
-	int mksh_count = 20;
+	int mksh_count = 50;
 	char current_step[100];
 	char current_temp[100];
 	Ecm = 1;
@@ -733,7 +734,7 @@ void CIzingModelDlg::CalculateGraphs() {
 			enrg.energy /= size * size * size;
 		}
 		else {
-			mksh_count = 20;
+			mksh_count = 50;
 			for (int mksh = 0; mksh < mksh_count; mksh++) {
 				// Вывод иинформации на экран.
 				sprintf_s(current_step, "%d", mksh);
